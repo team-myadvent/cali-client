@@ -1,7 +1,6 @@
 import { useRouter } from "next/router";
 import styled from "@emotion/styled";
 import Layout from "../components/Layout/Layout";
-import Banner from "../components/Layout/Banner";
 
 const Home = () => {
   const router = useRouter();
@@ -10,7 +9,6 @@ const Home = () => {
   };
   return (
     <Layout>
-      <Banner />
       <Main>
         <CalendarList>
           {[...Array(25)].map((_, index) => (

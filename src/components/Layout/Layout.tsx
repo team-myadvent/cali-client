@@ -1,15 +1,13 @@
+import { useAuth } from "@/hooks/useAuth";
 import styled from "@emotion/styled";
 import { useRouter } from "next/router";
-import { useState } from "react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // 추후 실제 인증 상태로 대체
-  const userNickname = "슬기슬기"; // 추후 실제 유저 정보로 대체
-
+  const { isAuthenticated, user, logout } = useAuth();
   const router = useRouter();
 
   const handleLoginClick = () => {
@@ -29,11 +27,12 @@ const Layout = ({ children }: LayoutProps) => {
       <Header>
         <Logo onClick={handleLogoClick}>cali</Logo>
         <ProfileSection>
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <UserProfile>
               <UserNickname onClick={handleProfileClick}>
-                {userNickname}
+                {user?.profileId || "사용자"}
               </UserNickname>
+              <LoginButton onClick={logout}>로그아웃</LoginButton>
             </UserProfile>
           ) : (
             <LoginButton onClick={handleLoginClick}>로그인</LoginButton>

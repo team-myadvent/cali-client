@@ -1,38 +1,16 @@
+import { useAuth } from "@/hooks/useAuth";
+
 import { useEffect } from "react";
 
 const KakaoRedirectHandler = () => {
+  const { login } = useAuth();
+
   useEffect(() => {
     const code = window.location.search.split("code=")[1].split("&")[0];
-
     if (code) {
-      console.log("Starting login process with code:", code);
-      console.log("Initial cookies:", document.cookie);
-
-      fetch(
-        `https://dev.myadvent-calendar.com/api/v1/auth/kakao?code=${code}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // 쿠키를 받기 위해 필수
-        }
-      )
-        .then(async (res) => {
-          if (!res.ok) {
-            throw new Error("서버 응답 실패");
-          }
-          return res.json();
-        })
-        .then((data) => {
-          console.log("Login successful, data:", data);
-
-          // location.href = "/";
-        })
-        .catch((error) => {
-          console.error("카카오 로그인 에러:", error);
-          location.href = "/login";
-        });
+      login(code);
+    } else {
+      console.error("인증 코드가 존재하지 않습니다.");
     }
   }, []);
 
