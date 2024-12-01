@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import styled from "@emotion/styled";
 import { useRouter } from "next/router";
+import Button from "../common/Button";
+import { colors } from "@/styles/colors";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,6 +11,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const { isAuthenticated, user, logout } = useAuth();
   const router = useRouter();
+  const isLoginPage = router.pathname === "/login";
 
   const handleLoginClick = () => {
     router.push("/login");
@@ -26,18 +29,22 @@ const Layout = ({ children }: LayoutProps) => {
     <Container>
       <Header>
         <Logo onClick={handleLogoClick}>cali</Logo>
-        <ProfileSection>
-          {isAuthenticated ? (
-            <UserProfile>
-              <UserNickname onClick={handleProfileClick}>
-                {user?.profileId || "사용자"}
-              </UserNickname>
-              <LoginButton onClick={logout}>로그아웃</LoginButton>
-            </UserProfile>
-          ) : (
-            <LoginButton onClick={handleLoginClick}>로그인</LoginButton>
-          )}
-        </ProfileSection>
+        {!isLoginPage && (
+          <ProfileSection>
+            {isAuthenticated ? (
+              <UserProfile>
+                <UserNickname onClick={handleProfileClick}>
+                  {user?.profileId || "사용자"}
+                </UserNickname>
+                <LoginButton onClick={logout}>로그아웃</LoginButton>
+              </UserProfile>
+            ) : (
+              <Button variant="export" onClick={handleLoginClick}>
+                로그인
+              </Button>
+            )}
+          </ProfileSection>
+        )}
       </Header>
 
       {children}
@@ -59,16 +66,24 @@ const Layout = ({ children }: LayoutProps) => {
 export default Layout;
 
 const Container = styled.div`
-  min-height: 100vh;
+  padding-top: 60px;
+  min-height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
 `;
 const Header = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #eaeaea;
+  padding: 0.375rem 2rem;
+  background-color: white;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 const Logo = styled.div`
@@ -97,7 +112,6 @@ const LoginButton = styled.button`
 
 const Footer = styled.footer`
   padding: 2rem;
-  border-top: 1px solid #eaeaea;
 `;
 
 const FooterContent = styled.div`
@@ -128,5 +142,5 @@ const UserProfile = styled.div`
 
 const UserNickname = styled.span`
   font-weight: 500;
-  color: white;
+  color: ${colors.brown[5]};
 `;
