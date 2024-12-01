@@ -1,4 +1,5 @@
 import { Global, css } from "@emotion/react";
+import { colors } from "./colors";
 
 const style = css`
   html {
@@ -7,7 +8,7 @@ const style = css`
     padding: 0;
     width: 100%;
     height: 100%;
-  }
+    background-color: ${colors.brown[2]};
 
   body {
     //TODO: font 변경 예정
