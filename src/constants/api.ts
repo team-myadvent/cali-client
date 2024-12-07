@@ -5,6 +5,9 @@ export const API_ENDPOINTS = {
   AUTH: {
     KAKAO: "/auth/kakao",
   },
+  CALENDAR: {
+    CALENDARS: "/calendars",
+  },
 };
 
 export const API_METHODS = {
