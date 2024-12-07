@@ -88,7 +88,7 @@ const CalendarItem = styled.li<{ isBlurred: boolean }>`
       right: 0;
       bottom: 0;
       border-style: dotted;
-      border-width: 2px;
+      border-width: 3px;
       border-color: ${colors.white};
       border-radius: 12px;
       z-index: 3;
