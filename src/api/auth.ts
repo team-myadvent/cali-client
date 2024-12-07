@@ -10,6 +10,7 @@ export interface AuthResponse {
   refresh_token: string;
   profile_id: string;
   user_id: string;
+  username: string;
 }
 
 export const fetchKakaoAuth = async (code: string): Promise<AuthResponse> => {
@@ -26,12 +27,14 @@ export const fetchKakaoAuth = async (code: string): Promise<AuthResponse> => {
   const resultsData = data?.results?.data;
 
   if (resultsData) {
-    const { access_token, profile_id, refresh_token, user_id } = resultsData;
+    const { access_token, profile_id, refresh_token, user_id, username } =
+      resultsData;
     return {
       access_token,
       profile_id,
       refresh_token,
       user_id,
+      username,
     };
   } else {
     throw new Error("유효하지 않은 응답 데이터");

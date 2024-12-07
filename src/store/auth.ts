@@ -5,6 +5,7 @@ interface User {
   refreshToken: string;
   profileId: string;
   userId: string;
+  username: string;
 }
 
 export const isAuthenticatedAtom = atom<boolean>(false);

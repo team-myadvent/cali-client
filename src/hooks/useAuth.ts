@@ -12,13 +12,15 @@ export const useAuth = () => {
   const login = async (code: string) => {
     try {
       const authData = await fetchKakaoAuth(code);
-      const { access_token, profile_id, refresh_token, user_id } = authData;
+      const { access_token, profile_id, refresh_token, user_id, username } =
+        authData;
       setIsAuthenticated(true);
       setUser({
         accessToken: access_token,
         profileId: profile_id,
         refreshToken: refresh_token,
         userId: user_id,
+        username,
       });
       router.push("/");
     } catch (error) {
