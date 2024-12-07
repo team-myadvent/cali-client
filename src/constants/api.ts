@@ -6,7 +6,8 @@ export const API_ENDPOINTS = {
     KAKAO: "/auth/kakao",
   },
   CALENDAR: {
-    CALENDARS: "/calendars",
+    LIST: "/calendars",
+    CARD: "/calendars/card",
   },
 };
 

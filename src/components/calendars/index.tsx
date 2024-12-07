@@ -4,16 +4,19 @@ import { colors } from "@/styles/colors";
 import Image from "next/image";
 import { useCalendar } from "@/hooks/useCalendar";
 import { isDateBlurred, formatCalendarDate } from "@/utils";
+import { useRouter } from "next/router";
 
 interface CalendarProps {
-  handleCalendarClick: (day: number) => void;
   isBlurred: boolean;
 }
 
-const Calendar = ({ handleCalendarClick, isBlurred }: CalendarProps) => {
+const Calendar = ({ isBlurred }: CalendarProps) => {
+  const router = useRouter();
   const { calendarData, error, imageErrors, handleImageError } = useCalendar();
+  const handleCalendarClick = (cardId: string) => {
+    router.push(`/calendars/card/${cardId}`);
+  };
 
-  //TODO : 에러 처리 얼럿 보여주기
   if (error) {
     return <div>에러 발생: {error.message}</div>;
   }
@@ -27,7 +30,7 @@ const Calendar = ({ handleCalendarClick, isBlurred }: CalendarProps) => {
         return (
           <CalendarItem
             key={dayData.id}
-            onClick={() => !shouldBlur && handleCalendarClick(day)}
+            onClick={() => !shouldBlur && handleCalendarClick(dayData.id)}
             isBlurred={shouldBlur}
           >
             <CardNumber isBlurred={shouldBlur}>{day}</CardNumber>
