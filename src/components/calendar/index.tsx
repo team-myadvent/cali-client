@@ -1,6 +1,9 @@
 import styled from "@emotion/styled";
 import { Text } from "../common/Text";
 import { colors } from "@/styles/colors";
+import Image from "next/image";
+import { useCalendar } from "@/hooks/useCalendar";
+import { isDateBlurred, formatCalendarDate } from "@/utils";
 
 interface CalendarProps {
   handleCalendarClick: (day: number) => void;
@@ -8,30 +11,46 @@ interface CalendarProps {
 }
 
 const Calendar = ({ handleCalendarClick, isBlurred }: CalendarProps) => {
+  const { calendarData, error, imageErrors, handleImageError } = useCalendar();
+
+  //TODO : 에러 처리 얼럿 보여주기
+  if (error) {
+    return <div>에러 발생: {error.message}</div>;
+  }
+
   return (
     <CalendarList>
-      {[...Array(25)].map((_, index) => {
-        const day = index + 1;
+      {calendarData.map((dayData) => {
+        const day = formatCalendarDate(dayData.calendar_dt).day;
+        const shouldBlur = isBlurred || isDateBlurred(dayData.calendar_dt);
 
         return (
           <CalendarItem
-            key={day}
-            onClick={() => !isBlurred && handleCalendarClick(day)}
-            isBlurred={isBlurred}
+            key={dayData.id}
+            onClick={() => !shouldBlur && handleCalendarClick(day)}
+            isBlurred={shouldBlur}
           >
-            <CardNumber isBlurred={isBlurred}>{day}</CardNumber>
-            <ThumbnailWrapper isBlurred={isBlurred}>
-              {/* [!] maxresdefault.jpg 형식의 이미지 파일은 유튜브 영상에 따라 불러오지 못하는 경우가 있다.
-               */}
-              <ThumbnailImage
-                src={`https://img.youtube.com/vi/cg6dxedUJ3U/maxresdefault.jpg`}
+            <CardNumber isBlurred={shouldBlur}>{day}</CardNumber>
+            <ThumbnailWrapper isBlurred={shouldBlur}>
+              <Image
+                width={200}
+                height={200}
+                src={
+                  imageErrors.has(day)
+                    ? "/default_thumbnail.png"
+                    : dayData.calendar_thumbnail
+                }
                 alt={`Day ${day} thumbnail`}
+                style={{
+                  objectFit: "cover",
+                }}
+                loading="lazy"
+                onError={() => !imageErrors.has(day) && handleImageError(day)}
               />
             </ThumbnailWrapper>
-            {!isBlurred && (
+            {!shouldBlur && dayData.title && (
               <StyledText color="brown.5" variant="body">
-                {/* TODO title 로 변경 */}
-                All I want for Christmas is you - Mariah Carey
+                {dayData.title}
               </StyledText>
             )}
           </CalendarItem>
