@@ -1,6 +1,10 @@
 import { API_BASE_URL, API_ENDPOINTS, API_METHODS } from "@/constants/api";
 import { request } from ".";
-import { CalendarCardItem, CalendarItem } from "@/types/calendar";
+import {
+  CalendarCardItem,
+  CalendarItem,
+  UpdateCalendarCardItem,
+} from "@/types/calendar";
 
 interface CalendarResponse {
   status: boolean;
@@ -20,17 +24,37 @@ export interface CalendarCardResponse {
   };
 }
 
-export const getCalendar = async (accessToken: string) => {
-  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.LIST}`;
+export const getCalendar = async (userId: number) => {
+  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.LIST}/${userId}`;
   return request<CalendarResponse>(url, {
     method: API_METHODS.GET,
-    accessToken,
   });
 };
 
-export const getCalendarCard = async (cardId: string) => {
-  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.CARD}/${cardId}`;
+export const getDefaultCalendar = async () => {
+  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.LIST}`;
+  return request<CalendarResponse>(url, {
+    method: API_METHODS.GET,
+  });
+};
+
+export const getCalendarCard = async (userId: number, idx: number) => {
+  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.CARD}/${userId}/${idx}`;
   return request<CalendarCardResponse>(url, {
     method: API_METHODS.GET,
+  });
+};
+
+export const updateCalendarCard = async (
+  accessToken: string,
+  userId: number,
+  idx: number,
+  data: UpdateCalendarCardItem
+) => {
+  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.CARD}/${userId}/${idx}`;
+  return request<CalendarCardResponse>(url, {
+    method: API_METHODS.PUT,
+    accessToken,
+    body: JSON.stringify(data),
   });
 };

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { getCalendar } from '@/api/calendar';
-import type { CalendarItem } from '@/types/calendar';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from "react";
+import { getCalendar, getDefaultCalendar } from "@/api/calendar";
+import type { CalendarItem } from "@/types/calendar";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useCalendar = () => {
   const { user } = useAuth();
@@ -11,7 +11,16 @@ export const useCalendar = () => {
 
   useEffect(() => {
     if (user?.accessToken) {
-      getCalendar(user.accessToken)
+      getCalendar(user.userId)
+        .then((res) => {
+          const filteredData = res.results.data.slice(0, 25);
+          setCalendarData(filteredData);
+        })
+        .catch((err) => {
+          setError(err);
+        });
+    } else {
+      getDefaultCalendar()
         .then((res) => {
           const filteredData = res.results.data.slice(0, 25);
           setCalendarData(filteredData);
@@ -20,7 +29,7 @@ export const useCalendar = () => {
           setError(err);
         });
     }
-  }, [user?.accessToken]);
+  }, [user]);
 
   const handleImageError = (day: number) => {
     setImageErrors((prev) => new Set(prev).add(day));
@@ -32,4 +41,4 @@ export const useCalendar = () => {
     imageErrors,
     handleImageError,
   };
-}; 
+};

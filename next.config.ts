@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         hostname: "cali-bucket.s3.ap-northeast-2.amazonaws.com",
         pathname: "/media/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+        pathname: "/vi/**",
+      },
     ],
   },
 };

@@ -9,7 +9,7 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   profile_id: string;
-  user_id: string;
+  user_id: number;
   username: string;
 }
 

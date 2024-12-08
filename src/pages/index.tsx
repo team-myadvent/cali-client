@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 import styled from "@emotion/styled";
 import Layout from "../components/Layout/Layout";
 import Calendar from "../components/calendars";

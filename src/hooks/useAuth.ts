@@ -3,6 +3,7 @@ import { userAtom, isAuthenticatedAtom } from "@/store/auth";
 import { fetchKakaoAuth } from "@/api/auth";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import { User } from "@/types/user";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useAtom(isAuthenticatedAtom);
@@ -27,7 +28,7 @@ export const useAuth = () => {
       localStorage.setItem("auth", JSON.stringify(userData));
 
       setIsAuthenticated(true);
-      setUser(userData);
+      setUser(userData as User);
       router.push("/");
     } catch (error) {
       console.error("카카오 로그인 에러:", error);

@@ -13,8 +13,8 @@ interface CalendarProps {
 const Calendar = ({ isBlurred }: CalendarProps) => {
   const router = useRouter();
   const { calendarData, error, imageErrors, handleImageError } = useCalendar();
-  const handleCalendarClick = (cardId: string) => {
-    router.push(`/calendars/card/${cardId}`);
+  const handleCalendarClick = (day: number) => {
+    router.push(`/calendars/card/${day}`);
   };
 
   if (error) {
@@ -30,7 +30,7 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
         return (
           <CalendarItem
             key={dayData.id}
-            onClick={() => !shouldBlur && handleCalendarClick(dayData.id)}
+            onClick={() => !shouldBlur && handleCalendarClick(day)}
             isBlurred={shouldBlur}
           >
             <CardNumber isBlurred={shouldBlur}>{day}</CardNumber>
