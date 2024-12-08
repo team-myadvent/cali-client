@@ -76,22 +76,20 @@ const CalendarCardPage = () => {
   if (error) return <div>에러 발생: {error.message}</div>;
   if (!cardData) return <div>데이터를 찾을 수 없습니다.</div>;
 
-  const { day } = formatCalendarDate(cardData.calendar_dt);
-
   return (
     <Layout>
       <Container>
         <HeaderSection>
-          {!isEditing ? (
+          {user && !isEditing ? (
             <EditButton onClick={handleEditClick}>수정하기</EditButton>
-          ) : (
+          ) : user && isEditing ? (
             <ButtonGroup>
               <SaveButton onClick={handleSave}>저장</SaveButton>
               <CancelButton onClick={() => setIsEditing(false)}>
                 취소
               </CancelButton>
             </ButtonGroup>
-          )}
+          ) : null}
         </HeaderSection>
 
         <SongInfo>

@@ -44,6 +44,12 @@ export const getCalendarCard = async (userId: number, idx: number) => {
     method: API_METHODS.GET,
   });
 };
+export const getDefaultCalendarCard = async (idx: number) => {
+  const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.LIST}?idx=${idx}`;
+  return request<CalendarCardResponse>(url, {
+    method: API_METHODS.GET,
+  });
+};
 
 export const updateCalendarCard = async (
   accessToken: string,
