@@ -1,7 +1,6 @@
 import styled from "@emotion/styled";
 import { Text } from "../common/Text";
 import { colors } from "@/styles/colors";
-import Image from "next/image";
 import { useCalendar } from "@/hooks/useCalendar";
 import { isDateBlurred, formatCalendarDate } from "@/utils";
 import { useRouter } from "next/router";
@@ -13,6 +12,33 @@ interface CalendarProps {
 const Calendar = ({ isBlurred }: CalendarProps) => {
   const router = useRouter();
   const { calendarData, error, imageErrors, handleImageError } = useCalendar();
+
+  const getThumbnailUrl = (dayData: any) => {
+    // 날짜 비교를 위해 시간을 제거하고 날짜만 비교
+    const cardDate = new Date(dayData.calendar_dt);
+    cardDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 날짜 비교를 위해 타임스탬프 사용
+    const cardTimestamp = cardDate.getTime();
+    const todayTimestamp = today.getTime();
+
+    // 오늘 이하(이전 날짜 + 오늘)인 경우 YouTube 썸네일
+    if (cardTimestamp <= todayTimestamp && dayData.youtube_video_id) {
+      return `https://img.youtube.com/vi/${dayData.youtube_video_id}/maxresdefault.jpg`;
+    }
+
+    // 오늘 초과인 경우 캘린더 썸네일
+    if (cardTimestamp > todayTimestamp && dayData.calendar_thumbnail) {
+      return dayData.calendar_thumbnail;
+    }
+
+    // youtube_video_id나 calendar_thumbnail이 없는 경우
+    return "/default_thumbnail.png";
+  };
+
   const handleCalendarClick = (day: number) => {
     router.push(`/calendars/card/${day}`);
   };
@@ -21,11 +47,14 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
     return <div>에러 발생: {error.message}</div>;
   }
 
+  console.log("calendarData", calendarData);
+
   return (
     <CalendarList>
       {calendarData.map((dayData) => {
         const day = formatCalendarDate(dayData.calendar_dt).day;
         const shouldBlur = isBlurred || isDateBlurred(dayData.calendar_dt);
+        const thumbnailUrl = getThumbnailUrl(dayData);
 
         return (
           <CalendarItem
@@ -35,13 +64,11 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
           >
             <CardNumber isBlurred={shouldBlur}>{day}</CardNumber>
             <ThumbnailWrapper isBlurred={shouldBlur}>
-              <Image
+              <img
                 width={200}
                 height={200}
                 src={
-                  imageErrors.has(day)
-                    ? "/default_thumbnail.png"
-                    : dayData.calendar_thumbnail
+                  imageErrors.has(day) ? "/default_thumbnail.png" : thumbnailUrl
                 }
                 alt={`Day ${day} thumbnail`}
                 style={{

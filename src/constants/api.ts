@@ -9,6 +9,9 @@ export const API_ENDPOINTS = {
     LIST: "/calendars",
     CARD: "/calendars/card",
   },
+  SEARCH: {
+    YOUTUBE: "/search",
+  },
 };
 
 export const API_METHODS = {

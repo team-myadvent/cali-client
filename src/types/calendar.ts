@@ -5,6 +5,7 @@ export interface CalendarItem {
   comment: string;
   youtube_music_link: string;
   calendar_thumbnail: string;
+  youtube_video_id: string;
 }
 
 export interface CalendarCardItem {

@@ -7,6 +7,9 @@ import { formatCalendarDate } from "@/utils";
 import { useState, useEffect } from "react";
 import { UpdateCalendarCardItem } from "@/types/calendar";
 import { useAuth } from "@/hooks/useAuth";
+import { getYoutubeKeywordSearch } from "@/api/search";
+import Button from "@/components/common/Button";
+import { YoutubeVideo } from "@/types/serach";
 
 const CalendarCardPage = () => {
   const router = useRouter();
@@ -20,9 +23,11 @@ const CalendarCardPage = () => {
   const [youtubeVideoId, setYoutubeVideoId] = useState("");
   const [editData, setEditData] = useState<UpdateCalendarCardItem>({
     title: "",
-    comment: "",
     youtube_video_id: "",
   });
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchResults, setSearchResults] = useState<YoutubeVideo[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
 
@@ -36,7 +41,6 @@ const CalendarCardPage = () => {
     if (cardData) {
       setEditData({
         title: cardData.title,
-        comment: cardData.comment,
         youtube_video_id: cardData.youtube_video_id,
       });
       setYoutubeVideoId(cardData.youtube_video_id);
@@ -72,6 +76,53 @@ const CalendarCardPage = () => {
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchKeyword.trim()) return;
+
+    try {
+      setIsSearching(true);
+      const response = await getYoutubeKeywordSearch(searchKeyword);
+      console.log("response", response);
+
+      setSearchResults(response.results.data);
+    } catch (error) {
+      console.error("검색 실패:", error);
+      alert("검색 중 오류가 발생했습니다.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectVideo = async (videoId: string, title: string) => {
+    if (!user?.userId || !cardData) return;
+
+    try {
+      const updateData = {
+        ...editData,
+        title: title,
+        youtube_video_id: videoId,
+      };
+
+      await updateCalendarCard(
+        user.accessToken || "",
+        user.userId,
+        Number(cardId),
+        updateData
+      );
+
+      setYoutubeVideoId(videoId);
+      setEditData(updateData);
+      setSearchResults([]);
+      setSearchKeyword("");
+
+      // 업데이트 후 페이지 새로고침
+      router.reload();
+    } catch (error) {
+      console.error("업데이트 실패:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  };
+
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>에러 발생: {error.message}</div>;
   if (!cardData) return <div>데이터를 찾을 수 없습니다.</div>;
@@ -81,16 +132,53 @@ const CalendarCardPage = () => {
       <Container>
         <HeaderSection>
           {user && !isEditing ? (
-            <EditButton onClick={handleEditClick}>수정하기</EditButton>
+            <>
+              <SearchContainer>
+                <SearchInput
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="노래 검색..."
+                />
+                <Button variant="save" onClick={handleSearch}>
+                  검색
+                </Button>
+              </SearchContainer>
+              <Button variant="save" onClick={handleEditClick}>
+                수정하기
+              </Button>
+            </>
           ) : user && isEditing ? (
             <ButtonGroup>
-              <SaveButton onClick={handleSave}>저장</SaveButton>
-              <CancelButton onClick={() => setIsEditing(false)}>
+              <Button variant="save" onClick={handleSave}>
+                저장
+              </Button>
+              <Button variant="save" onClick={() => setIsEditing(false)}>
                 취소
-              </CancelButton>
+              </Button>
             </ButtonGroup>
           ) : null}
         </HeaderSection>
+
+        {searchResults.length > 0 && (
+          <SearchResults>
+            {searchResults.map((result) => (
+              <SearchResultItem key={result.youtube_video_id}>
+                <div>
+                  <SearchResultTitle>{result.title}</SearchResultTitle>
+                </div>
+                <Button
+                  onClick={() =>
+                    handleSelectVideo(result.youtube_video_id, result.title)
+                  }
+                  variant="select"
+                >
+                  선택
+                </Button>
+              </SearchResultItem>
+            ))}
+          </SearchResults>
+        )}
 
         <SongInfo>
           {isEditing ? (
@@ -201,7 +289,7 @@ const CommentSection = styled.div`
   }
 `;
 
-const ThumbnailImage = styled.div`
+const ThumbnailImage = styled.img`
   margin: 1rem 0;
 
   img {
@@ -223,31 +311,6 @@ const ButtonGroup = styled.div`
   gap: 1rem;
 `;
 
-const Button = styled.button`
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-`;
-
-const EditButton = styled(Button)`
-  background-color: #007bff;
-  color: white;
-  border: none;
-`;
-
-const SaveButton = styled(Button)`
-  background-color: #28a745;
-  color: white;
-  border: none;
-`;
-
-const CancelButton = styled(Button)`
-  background-color: #dc3545;
-  color: white;
-  border: none;
-`;
-
 const Input = styled.input`
   width: 100%;
   padding: 0.5rem;
@@ -255,4 +318,43 @@ const Input = styled.input`
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  margin-right: 1rem;
+`;
+
+const SearchInput = styled.input`
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+`;
+
+const SearchResults = styled.div`
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+`;
+
+const SearchResultItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #ddd;
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const SearchResultTitle = styled.div`
+  font-size: 1rem;
+  margin-right: 1rem;
 `;

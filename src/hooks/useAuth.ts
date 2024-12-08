@@ -2,16 +2,18 @@ import { useAtom } from "jotai";
 import { userAtom, isAuthenticatedAtom } from "@/store/auth";
 import { fetchKakaoAuth } from "@/api/auth";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { User } from "@/types/user";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useAtom(isAuthenticatedAtom);
   const [user, setUser] = useAtom(userAtom);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   const login = async (code: string) => {
     try {
+      setIsLoading(true);
       const authData = await fetchKakaoAuth(code);
       const { access_token, profile_id, refresh_token, user_id, username } =
         authData;
@@ -24,9 +26,7 @@ export const useAuth = () => {
         username,
       };
 
-      // localStorage에 인증 데이터 저장
       localStorage.setItem("auth", JSON.stringify(userData));
-
       setIsAuthenticated(true);
       setUser(userData as User);
       router.push("/");
@@ -36,51 +36,17 @@ export const useAuth = () => {
       setUser(null);
       localStorage.removeItem("auth");
       router.push("/login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    localStorage.removeItem("auth");
-    router.push("/login");
-  };
-  // const isTokenValid = (token: string) => {
-  //   try {
-  //     const decoded = jwt_decode(token);
-  //     return decoded.exp * 1000 > Date.now();
-  //   } catch {
-  //     return false;
-  //   }
-  // };
-
-  // const refreshToken = async () => {
-  //   try {
-  //     const storedAuth = localStorage.getItem("auth");
-  //     if (!storedAuth) throw new Error("No refresh token");
-
-  //     const { refreshToken } = JSON.parse(storedAuth);
-  //     const response = await fetch("/api/auth/refresh", {
-  //       method: "POST",
-  //       body: JSON.stringify({ refreshToken }),
-  //     });
-
-  //     const newAuthData = await response.json();
-  //     localStorage.setItem("auth", JSON.stringify(newAuthData));
-  //     setUser(newAuthData);
-  //     setIsAuthenticated(true);
-  //   } catch (error) {
-  //     logout();
-  //   }
-  // };
-
-  // 컴포넌트 마운트 시 localStorage에서 인증 데이터 복원
   useEffect(() => {
+    setIsLoading(true);
     const storedAuth = localStorage.getItem("auth");
     if (storedAuth) {
       try {
         const parsedAuth = JSON.parse(storedAuth);
-        // 토큰 유효성 검사 로직을 추가할 수 있습니다
         setIsAuthenticated(true);
         setUser(parsedAuth);
       } catch (error) {
@@ -90,12 +56,23 @@ export const useAuth = () => {
         setUser(null);
       }
     }
-  }, [setIsAuthenticated, setUser]); // 의존성 배열에 setter 함수 추가
+    setIsLoading(false);
+  }, [setIsAuthenticated, setUser]);
+
+  const logout = () => {
+    setIsLoading(true);
+    setIsAuthenticated(false);
+    setUser(null);
+    localStorage.removeItem("auth");
+    router.push("/login");
+    setIsLoading(false);
+  };
 
   return {
     isAuthenticated,
     user,
     login,
     logout,
+    isLoading,
   };
 };
