@@ -5,6 +5,13 @@ export const API_ENDPOINTS = {
   AUTH: {
     KAKAO: "/auth/kakao",
   },
+  CALENDAR: {
+    LIST: "/calendars",
+    CARD: "/calendars/card",
+  },
+  SEARCH: {
+    YOUTUBE: "/search",
+  },
 };
 
 export const API_METHODS = {
