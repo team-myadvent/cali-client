@@ -3,13 +3,16 @@ import { updateCalendarCard } from "@/api/calendar";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout/Layout";
 import styled from "@emotion/styled";
-import { formatCalendarDate } from "@/utils";
 import { useState, useEffect } from "react";
 import { UpdateCalendarCardItem } from "@/types/calendar";
 import { useAuth } from "@/hooks/useAuth";
 import { getYoutubeKeywordSearch } from "@/api/search";
 import Button from "@/components/common/Button";
 import { YoutubeVideo } from "@/types/serach";
+import { colors } from "@/styles/colors";
+
+// TODO : input 컴포넌트 만들어서 사용하기
+// TODO : throttle / debounce 적용하기
 
 const CalendarCardPage = () => {
   const router = useRouter();
@@ -19,11 +22,14 @@ const CalendarCardPage = () => {
     user?.userId,
     Number(cardId)
   );
+
   const [isEditing, setIsEditing] = useState(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState("");
   const [editData, setEditData] = useState<UpdateCalendarCardItem>({
     title: "",
     youtube_video_id: "",
+    comment: "",
+    comment_detail: "",
   });
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<YoutubeVideo[]>([]);
@@ -46,16 +52,6 @@ const CalendarCardPage = () => {
       setYoutubeVideoId(cardData.youtube_video_id);
       setIsEditing(true);
     }
-  };
-
-  const handleYoutubeIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVideoId = e.target.value;
-    setYoutubeVideoId(newVideoId);
-    setEditData((prev) => ({
-      ...prev,
-      youtube_video_id: newVideoId,
-      youtube_thumbnail_link: `https://img.youtube.com/vi/${newVideoId}/maxresdefault.jpg`,
-    }));
   };
 
   const handleSave = async () => {
@@ -82,7 +78,6 @@ const CalendarCardPage = () => {
     try {
       setIsSearching(true);
       const response = await getYoutubeKeywordSearch(searchKeyword);
-      console.log("response", response);
 
       setSearchResults(response.results.data);
     } catch (error) {
@@ -139,9 +134,14 @@ const CalendarCardPage = () => {
                   onChange={(e) => setSearchKeyword(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                   placeholder="노래 검색..."
+                  disabled={isSearching}
                 />
-                <Button variant="save" onClick={handleSearch}>
-                  검색
+                <Button
+                  variant="save"
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                >
+                  {isSearching ? "검색 중..." : "검색"}
                 </Button>
               </SearchContainer>
               <Button variant="save" onClick={handleEditClick}>
@@ -160,24 +160,32 @@ const CalendarCardPage = () => {
           ) : null}
         </HeaderSection>
 
-        {searchResults.length > 0 && (
+        {isSearching ? (
           <SearchResults>
-            {searchResults.map((result) => (
-              <SearchResultItem key={result.youtube_video_id}>
-                <div>
-                  <SearchResultTitle>{result.title}</SearchResultTitle>
-                </div>
-                <Button
-                  onClick={() =>
-                    handleSelectVideo(result.youtube_video_id, result.title)
-                  }
-                  variant="select"
-                >
-                  선택
-                </Button>
-              </SearchResultItem>
-            ))}
+            <SearchResultItem>
+              <SearchResultTitle>검색 중...</SearchResultTitle>
+            </SearchResultItem>
           </SearchResults>
+        ) : (
+          searchResults.length > 0 && (
+            <SearchResults>
+              {searchResults.map((result) => (
+                <SearchResultItem key={result.youtube_video_id}>
+                  <div>
+                    <SearchResultTitle>{result.title}</SearchResultTitle>
+                  </div>
+                  <Button
+                    onClick={() =>
+                      handleSelectVideo(result.youtube_video_id, result.title)
+                    }
+                    variant="select"
+                  >
+                    선택
+                  </Button>
+                </SearchResultItem>
+              ))}
+            </SearchResults>
+          )
         )}
 
         <SongInfo>
@@ -189,11 +197,6 @@ const CalendarCardPage = () => {
                   setEditData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 placeholder="제목을 입력하세요"
-              />
-              <Input
-                value={youtubeVideoId}
-                onChange={handleYoutubeIdChange}
-                placeholder="YouTube 비디오 ID를 입력하세요"
               />
             </>
           ) : (
@@ -212,6 +215,7 @@ const CalendarCardPage = () => {
           </YoutubeEmbed>
 
           <CommentSection>
+            <CommentTitle>코멘트</CommentTitle>
             <textarea
               value={isEditing ? editData.comment : cardData.comment}
               onChange={
@@ -227,10 +231,36 @@ const CalendarCardPage = () => {
               maxLength={200}
               placeholder={isEditing ? "코멘트를 입력하세요" : ""}
             />
-            <span>
+            <CommentLength>
               {(isEditing ? editData.comment : cardData.comment)?.length || 0}
               /200
-            </span>
+            </CommentLength>
+
+            <CommentTitle style={{ marginTop: "1rem" }}>
+              상세 코멘트
+            </CommentTitle>
+            <textarea
+              value={
+                isEditing ? editData.comment_detail : cardData.comment_detail
+              }
+              onChange={
+                isEditing
+                  ? (e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        comment_detail: e.target.value,
+                      }))
+                  : undefined
+              }
+              readOnly={!isEditing}
+              maxLength={1000}
+              placeholder={isEditing ? "상세 코멘트를 입력하세요" : ""}
+            />
+            <CommentLength>
+              {(isEditing ? editData.comment_detail : cardData.comment_detail)
+                ?.length || 0}
+              /1000
+            </CommentLength>
           </CommentSection>
         </SongInfo>
       </Container>
@@ -286,6 +316,17 @@ const CommentSection = styled.div`
     background-color: #f8f9fa;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-family: inherit;
+    line-height: 1.5;
+
+    &:focus {
+      outline: none;
+      border-color: ${colors.brown[3]};
+    }
+
+    &::placeholder {
+      color: ${colors.brown[2]};
+    }
   }
 `;
 
@@ -357,4 +398,18 @@ const SearchResultItem = styled.div`
 const SearchResultTitle = styled.div`
   font-size: 1rem;
   margin-right: 1rem;
+`;
+
+const CommentTitle = styled.h3`
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: ${colors.brown[5]};
+`;
+
+const CommentLength = styled.span`
+  display: block;
+  text-align: right;
+  color: ${colors.brown[3]};
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 `;
