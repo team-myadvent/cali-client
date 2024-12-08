@@ -10,6 +10,8 @@ import { getYoutubeKeywordSearch } from "@/api/search";
 import Button from "@/components/common/Button";
 import { YoutubeVideo } from "@/types/serach";
 import { colors } from "@/styles/colors";
+import { useShare } from "@/hooks/useShare";
+import ShareModal from "@/components/common/ShareModal";
 
 // TODO : input 컴포넌트 만들어서 사용하기
 // TODO : throttle / debounce 적용하기
@@ -22,6 +24,19 @@ const CalendarCardPage = () => {
     user?.userId,
     Number(cardId)
   );
+
+  const { 
+    isShareModalOpen, 
+    setIsShareModalOpen, 
+    shareUrl, 
+    handleCopyLink, 
+    handleSaveImage, 
+    handleShareSNS 
+  } = useShare({
+    username: user?.username,
+    userId: user?.userId,
+    baseUrl: `https://dev.myadvent-calendar.com/calendars/card/${cardId}`
+  });
 
   const [isEditing, setIsEditing] = useState(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState("");
@@ -144,9 +159,14 @@ const CalendarCardPage = () => {
                   {isSearching ? "검색 중..." : "검색"}
                 </Button>
               </SearchContainer>
-              <Button variant="save" onClick={handleEditClick}>
-                수정하기
-              </Button>
+              <ButtonGroup>
+                <Button variant="export" onClick={() => setIsShareModalOpen(true)}>
+                  내보내기
+                </Button>
+                <Button variant="save" onClick={handleEditClick}>
+                  수정하기
+                </Button>
+              </ButtonGroup>
             </>
           ) : user && isEditing ? (
             <ButtonGroup>
@@ -263,6 +283,16 @@ const CalendarCardPage = () => {
             </CommentLength>
           </CommentSection>
         </SongInfo>
+
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          shareUrl={shareUrl}
+          onCopyLink={handleCopyLink}
+          onSaveImage={handleSaveImage}
+          onShareSNS={handleShareSNS}
+          thumbnailUrl={`https://img.youtube.com/vi/${cardData?.youtube_video_id}/maxresdefault.jpg`}
+        />
       </Container>
     </Layout>
   );
