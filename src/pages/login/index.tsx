@@ -31,10 +31,10 @@ const Login = () => {
     <Layout>
       <LoginContainer>
         <ContentWrapper>
-          <Text variant="heading" color="brown.5">
+          <Text variant="heading" color="black">
             로그인하여 나의 캘리를 만들고
           </Text>
-          <Text variant="heading" color="brown.5">
+          <Text variant="heading" color="black">
             친구들과 공유해보세요.
           </Text>
           {/* TODO : 이미지에서 컴포넌트 구현으로 변경하기  */}

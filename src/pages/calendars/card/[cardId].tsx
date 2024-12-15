@@ -25,17 +25,17 @@ const CalendarCardPage = () => {
     Number(cardId)
   );
 
-  const { 
-    isShareModalOpen, 
-    setIsShareModalOpen, 
-    shareUrl, 
-    handleCopyLink, 
-    handleSaveImage, 
-    handleShareSNS 
+  const {
+    isShareModalOpen,
+    setIsShareModalOpen,
+    shareUrl,
+    handleCopyLink,
+    handleSaveImage,
+    handleShareSNS,
   } = useShare({
     username: user?.username,
     userId: user?.userId,
-    baseUrl: `https://dev.myadvent-calendar.com/calendars/card/${cardId}`
+    baseUrl: `https://dev.myadvent-calendar.com/calendars/card/${cardId}`,
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -152,7 +152,7 @@ const CalendarCardPage = () => {
                   disabled={isSearching}
                 />
                 <Button
-                  variant="save"
+                  variant="register"
                   onClick={handleSearch}
                   disabled={isSearching}
                 >
@@ -160,20 +160,23 @@ const CalendarCardPage = () => {
                 </Button>
               </SearchContainer>
               <ButtonGroup>
-                <Button variant="export" onClick={() => setIsShareModalOpen(true)}>
+                <Button
+                  variant="export"
+                  onClick={() => setIsShareModalOpen(true)}
+                >
                   내보내기
                 </Button>
-                <Button variant="save" onClick={handleEditClick}>
+                <Button variant="register" onClick={handleEditClick}>
                   수정하기
                 </Button>
               </ButtonGroup>
             </>
           ) : user && isEditing ? (
             <ButtonGroup>
-              <Button variant="save" onClick={handleSave}>
+              <Button variant="register" onClick={handleSave}>
                 저장
               </Button>
-              <Button variant="save" onClick={() => setIsEditing(false)}>
+              <Button variant="register" onClick={() => setIsEditing(false)}>
                 취소
               </Button>
             </ButtonGroup>
@@ -351,11 +354,11 @@ const CommentSection = styled.div`
 
     &:focus {
       outline: none;
-      border-color: ${colors.brown[3]};
+      border-color: ${colors.grey[3]};
     }
 
     &::placeholder {
-      color: ${colors.brown[2]};
+      color: ${colors.grey[2]};
     }
   }
 `;
@@ -433,13 +436,13 @@ const SearchResultTitle = styled.div`
 const CommentTitle = styled.h3`
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-  color: ${colors.brown[5]};
+  color: ${colors.black};
 `;
 
 const CommentLength = styled.span`
   display: block;
   text-align: right;
-  color: ${colors.brown[3]};
+  color: ${colors.grey[3]};
   font-size: 0.9rem;
   margin-top: 0.25rem;
 `;

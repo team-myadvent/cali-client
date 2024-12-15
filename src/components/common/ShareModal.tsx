@@ -31,19 +31,19 @@ const ShareModal = ({
 
         <ShareUrl>
           <input type="text" value={shareUrl} readOnly />
-          <Button variant="save" onClick={onCopyLink}>
+          <Button variant="register" onClick={onCopyLink}>
             복사
           </Button>
         </ShareUrl>
 
         <ShareButtons>
-          <Button variant="save" onClick={onSaveImage}>
+          <Button variant="register" onClick={onSaveImage}>
             이미지로 저장
           </Button>
-          <Button variant="save" onClick={() => onShareSNS("twitter")}>
+          <Button variant="register" onClick={() => onShareSNS("twitter")}>
             트위터 공유
           </Button>
-          <Button variant="save" onClick={() => onShareSNS("facebook")}>
+          <Button variant="register" onClick={() => onShareSNS("facebook")}>
             페이스북 공유
           </Button>
         </ShareButtons>
@@ -80,7 +80,7 @@ const ShareUrl = styled.div`
   input {
     flex: 1;
     padding: 0.5rem;
-    border: 1px solid ${colors.brown[3]};
+    border: 1px solid ${colors.grey[3]};
     border-radius: 4px;
     font-size: 1rem;
   }

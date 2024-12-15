@@ -79,7 +79,7 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
               />
             </ThumbnailWrapper>
             {!shouldBlur && dayData.title && (
-              <StyledText color="brown.5" variant="body">
+              <StyledText color="black" variant="body">
                 {dayData.title}
               </StyledText>
             )}
@@ -108,7 +108,7 @@ const CalendarItem = styled.li<{ isBlurred: boolean }>`
   width: 200px;
   height: 200px;
   border: ${({ isBlurred }) =>
-    isBlurred ? "none" : `1px solid ${colors.brown[3]}`};
+    isBlurred ? "none" : `1px solid ${colors.grey[3]}`};
   border-radius: 12px;
   text-align: center;
   transition: all 0.2s;
@@ -152,8 +152,8 @@ const CardNumber = styled.div<{ isBlurred?: boolean }>`
   left: ${({ isBlurred }) => (isBlurred ? "50%" : "10px")};
   transform: ${({ isBlurred }) => (isBlurred ? "translateX(-50%)" : "none")};
   background-color: ${({ isBlurred }) =>
-    isBlurred ? colors.white : colors.brown[5]};
-  color: ${({ isBlurred }) => (isBlurred ? colors.brown[3] : colors.lemon)};
+    isBlurred ? colors.white : colors.black};
+  color: ${({ isBlurred }) => (isBlurred ? colors.grey[3] : colors.white)};
   border-radius: 50%;
   width: ${({ isBlurred }) => (isBlurred ? "84px" : "60px")};
   height: ${({ isBlurred }) => (isBlurred ? "80px" : "60px")};
@@ -203,7 +203,7 @@ const StyledText = styled(Text)`
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: ${colors.lemon};
+  background-color: ${colors.beige};
   white-space: nowrap;
   padding: 8px 12px;
   overflow: hidden;

@@ -78,7 +78,7 @@ const UserProfile = styled.div`
 
 const UserNickname = styled.span`
   font-weight: 500;
-  color: ${colors.brown[5]};
+  color: ${colors.black};
 `;
 
 const Layout = ({ children }: LayoutProps) => {

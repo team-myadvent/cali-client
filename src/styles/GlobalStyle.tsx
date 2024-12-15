@@ -8,7 +8,7 @@ const style = css`
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: ${colors.brown[2]};
+    background-color: ${colors.beige};
 
   body {
     //TODO: font 변경 예정
