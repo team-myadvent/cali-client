@@ -183,7 +183,7 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
             onClick={() => !shouldBlur && handleCalendarClick(day)}
             isBlurred={shouldBlur}
           >
-            <CardNumber isBlurred={shouldBlur}>
+            <CardNumber>
               <IconComponent />
             </CardNumber>
             <ThumbnailWrapper isBlurred={shouldBlur}>
@@ -225,62 +225,13 @@ const CalendarList = styled.ul`
   margin: 0 auto;
 `;
 
-const CalendarItem = styled.li<CalendarItemProps>`
+const CalendarItem = styled.li<{ isBlurred: boolean }>`
+  position: relative;
   width: 200px;
   height: 200px;
   border-radius: 12px;
-  text-align: center;
-  transition: all 0.2s;
+  overflow: hidden;
   cursor: ${({ isBlurred }) => (isBlurred ? "default" : "pointer")};
-  position: relative;
-  overflow: hidden;
-
-  ${({ isBlurred }) =>
-    isBlurred
-      ? `
-        background-color: ${colors.grey[1]};
-        &::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          right: 0;
-          width: 40px;
-          height: 100%;
-          background-color: white;
-          border-top-right-radius: 12px;
-          border-bottom-right-radius: 12px;
-        }
-      `
-      : `
-        border: 1px solid ${colors.grey[3]};
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-      `}
-`;
-
-const CardNumber = styled.div<CalendarItemProps>`
-  position: absolute;
-  top: ${({ isBlurred }) => (isBlurred ? "10px" : "10px")};
-  right: ${({ isBlurred }) => (isBlurred ? "5px" : "10px")};
-  z-index: 2;
-  width: 30px;
-  height: 30px;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-`;
-
-const ThumbnailWrapper = styled.div<{ isBlurred: boolean }>`
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
 
   ${({ isBlurred }) =>
     isBlurred &&
@@ -288,16 +239,48 @@ const ThumbnailWrapper = styled.div<{ isBlurred: boolean }>`
     &::after {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
+      top: 50%;
+      right: -32px;
+      width: 64px;
+      height: 64px;
+      background-color: white;
+      border-radius: 50%;
+      transform: translateY(-50%);
     }
   `}
+
+  ${({ isBlurred }) =>
+    !isBlurred &&
+    `
+    &:hover {
+      transform: translateY(-2px);
+      transition: transform 0.2s ease-in-out;
+    }
+  `}
+`;
+
+const CardNumber = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ThumbnailWrapper = styled.div<{ isBlurred: boolean }>`
+  width: 100%;
+  height: 100%;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: ${({ isBlurred }) => (isBlurred ? "blur(5px)" : "none")};
+  }
 `;
 
 const ThumbnailImage = styled.img`
