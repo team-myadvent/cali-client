@@ -188,22 +188,19 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
             </CardNumber>
             <ThumbnailWrapper isBlurred={shouldBlur}>
               <img
-                width={200}
-                height={200}
                 src={
                   imageErrors.has(day) ? "/default_thumbnail.png" : thumbnailUrl
                 }
                 alt={`Day ${day} thumbnail`}
-                style={{ objectFit: "cover" }}
                 loading="lazy"
                 onError={() => !imageErrors.has(day) && handleImageError(day)}
               />
+              {!shouldBlur && dayData.title && (
+                <TitleOverlay>
+                  <StyledText variant="body">{dayData.title}</StyledText>
+                </TitleOverlay>
+              )}
             </ThumbnailWrapper>
-            {!shouldBlur && dayData.title && (
-              <StyledText color="black" variant="body">
-                {dayData.title}
-              </StyledText>
-            )}
           </CalendarItem>
         );
       })}
@@ -272,6 +269,7 @@ const CardNumber = styled.div`
 `;
 
 const ThumbnailWrapper = styled.div<{ isBlurred: boolean }>`
+  position: relative;
   width: 100%;
   height: 100%;
 
@@ -283,21 +281,26 @@ const ThumbnailWrapper = styled.div<{ isBlurred: boolean }>`
   }
 `;
 
-const ThumbnailImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-const StyledText = styled(Text)`
+const TitleOverlay = styled.div`
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: ${colors.beige};
-  white-space: nowrap;
-  padding: 8px 12px;
+  bottom: 8px;
+  left: 10px;
+  right: 10px;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  z-index: 1;
+`;
+
+const StyledText = styled(Text)`
+  color: black;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-sizing: border-box;
-  z-index: 2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 `;
