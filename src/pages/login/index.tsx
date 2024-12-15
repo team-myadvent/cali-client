@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout/Layout";
 import styled from "@emotion/styled";
 import { Text } from "@/components/common/Text";
-import Image from "next/image";
+import KaKaoIcon from "@/components/common/icons/KaKaoIcon";
 
 const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI!;
 const scope = ["account_email", "gender", "age_range", "birthday"].join(",");
@@ -37,18 +37,12 @@ const Login = () => {
           <Text variant="heading" color="black">
             친구들과 공유해보세요.
           </Text>
-          {/* TODO : 이미지에서 컴포넌트 구현으로 변경하기  */}
-          <div
-            style={{ cursor: "pointer", marginTop: "40px" }}
-            onClick={handleKakaoLogin}
-          >
-            <Image
-              src="/kakao_login.png"
-              alt="카카오 로고"
-              width={300}
-              height={45}
-            />
-          </div>
+          <KakaoLoginButton onClick={handleKakaoLogin}>
+            <KaKaoIcon />
+            <Text variant="subtitle" style={{ color: "#191919" }}>
+              카카오 로그인
+            </Text>
+          </KakaoLoginButton>
         </ContentWrapper>
       </LoginContainer>
     </Layout>
@@ -62,18 +56,36 @@ const LoginContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 60px); // 헤더 높이만큼 빼기
-  padding: 0 20px;
+  height: 100vh;
 `;
 
 const ContentWrapper = styled.div`
   background: white;
-  border-radius: 24px;
-  padding: 48px 24px;
+  border-radius: 20px;
+  padding: 80px 24px;
   width: 100%;
   max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  text-align: center;
+  gap: 8px;
+`;
+
+const KakaoLoginButton = styled.div`
+  cursor: pointer;
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  width: 100%;
+  background-color: #fee500;
+  border-radius: 8px;
+  max-width: 300px;
+  &:hover {
+    background-color: #fee500;
+    opacity: 0.8;
+  }
 `;
