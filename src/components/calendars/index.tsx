@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 import { Text } from "../common/Text";
-import { colors } from "@/styles/colors";
 import { useCalendar } from "@/hooks/useCalendar";
 import { isDateBlurred, formatCalendarDate } from "@/utils";
 import { useRouter } from "next/router";
@@ -213,18 +212,38 @@ export default Calendar;
 const CalendarList = styled.ul`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  list-style: none;
-  padding: 0;
-  justify-content: center;
-  align-items: center;
-  max-width: 1024px;
-  margin: 0 auto;
+  gap: 20px;
+  padding: 0 20px;
+
+  @media (max-width: 540px) {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 20px;
+  }
+
+  @media (min-width: 541px) and (max-width: 880px) {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0 60px;
+  }
+
+  @media (min-width: 881px) and (max-width: 1140px) {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 60px;
+  }
+
+  @media (min-width: 1141px) and (max-width: 1400px) {
+    grid-template-columns: repeat(5, 1fr);
+    padding: 0 60px;
+  }
+
+  @media (min-width: 1401px) {
+    grid-template-columns: repeat(5, 240px);
+    padding: 0 60px;
+  }
 `;
 
 const CalendarItem = styled.li<{ isBlurred: boolean }>`
   position: relative;
-  width: 200px;
+  width: 100%;
   height: 200px;
   border-radius: 12px;
   overflow: hidden;
@@ -233,6 +252,7 @@ const CalendarItem = styled.li<{ isBlurred: boolean }>`
   ${({ isBlurred }) =>
     isBlurred &&
     `
+    border: 2px dashed white;
     &::after {
       content: '';
       position: absolute;
