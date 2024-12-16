@@ -167,6 +167,72 @@ const CalendarCardPage = () => {
   };
   console.log("editData", editData);
 
+  const GuestbookSection = () => {
+    const [guestbookInput, setGuestbookInput] = useState({
+      author: "",
+      content: "",
+    });
+
+    return (
+      <GuestbookWrapper>
+        <GuestbookTitle>방명록 5개</GuestbookTitle>
+        <GuestbookList>
+          <GuestbookItem>
+            <GuestbookAuthor>캘리짱</GuestbookAuthor>
+            <GuestbookContent>
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+            </GuestbookContent>
+          </GuestbookItem>
+          <GuestbookItem>
+            <GuestbookAuthor>캘리짱</GuestbookAuthor>
+            <GuestbookContent>
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+            </GuestbookContent>
+          </GuestbookItem>
+          <GuestbookItem>
+            <GuestbookAuthor>캘리짱</GuestbookAuthor>
+            <GuestbookContent>
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+            </GuestbookContent>
+          </GuestbookItem>
+          <GuestbookItem>
+            <GuestbookAuthor>캘리짱</GuestbookAuthor>
+            <GuestbookContent>
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+            </GuestbookContent>
+          </GuestbookItem>
+          {/* 다른 방명록 아이템들... */}
+        </GuestbookList>
+        <GuestbookInputWrapper>
+          <InputContainer>
+            <AuthorInput
+              placeholder="작성자명"
+              value={guestbookInput.author}
+              onChange={(e) =>
+                setGuestbookInput((prev) => ({
+                  ...prev,
+                  author: e.target.value,
+                }))
+              }
+            />
+            <ContentInput
+              placeholder="내용을 남겨주세요. (최대 100자)"
+              value={guestbookInput.content}
+              onChange={(e) =>
+                setGuestbookInput((prev) => ({
+                  ...prev,
+                  content: e.target.value,
+                }))
+              }
+              maxLength={100}
+            />
+          </InputContainer>
+          <SubmitButton>등록하기</SubmitButton>
+        </GuestbookInputWrapper>
+      </GuestbookWrapper>
+    );
+  };
+
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>에러 발생: {error.message}</div>;
   if (!cardData) return <div>데이터를 찾을 수 없습니다.</div>;
@@ -260,6 +326,8 @@ const CalendarCardPage = () => {
             </CommentContainer>
           </CommentWrapper>
         </CardWrapper>
+        <GuestbookSection />
+        <Button variant="export">내보내기</Button>
       </Container>
     </Layout>
   );
@@ -271,6 +339,10 @@ const Container = styled.div`
   width: 100%;
   margin: 0 auto;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-item: center;
+  gap: 20px;
 `;
 
 const CardWrapper = styled.div`
@@ -419,4 +491,94 @@ const SearchResultItem = styled.div`
 const SearchResultTitle = styled.div`
   font-size: 1rem;
   margin-right: 1rem;
+`;
+
+const GuestbookWrapper = styled.div`
+  margin-top: 24px;
+`;
+
+const GuestbookTitle = styled.h2`
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 16px;
+`;
+
+const GuestbookList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+`;
+
+const GuestbookItem = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+`;
+
+const GuestbookAuthor = styled.div`
+  font-weight: 500;
+  margin-bottom: 8px;
+`;
+
+const GuestbookContent = styled.div`
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+`;
+
+const GuestbookInputWrapper = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #eee;
+`;
+
+const InputContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const AuthorInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+
+  &::placeholder {
+    color: #999;
+  }
+`;
+
+const ContentInput = styled.input`
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 8px 0;
+
+  &::placeholder {
+    color: #999;
+  }
+`;
+
+const SubmitButton = styled.button`
+  background: #f4a7aa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+
+  &:hover {
+    background: #f39599;
+  }
 `;
