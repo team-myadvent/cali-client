@@ -12,6 +12,10 @@ import { YoutubeVideo } from "@/types/serach";
 import { colors } from "@/styles/colors";
 import { useShare } from "@/hooks/useShare";
 import ShareModal from "@/components/common/ShareModal";
+import React from "react";
+import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
+import { Text } from "@/components/common/Text";
+import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 
 // TODO : input 컴포넌트 만들어서 사용하기
 // TODO : throttle / debounce 적용하기
@@ -24,6 +28,8 @@ const CalendarCardPage = () => {
     user?.userId,
     Number(cardId)
   );
+
+  console.log("cardData", cardData);
 
   const {
     isShareModalOpen,
@@ -49,6 +55,8 @@ const CalendarCardPage = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const { day } = router.query; // URL에서 day 파라미터 가져오기
 
   const thumbnailUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
 
@@ -58,16 +66,19 @@ const CalendarCardPage = () => {
     }
   }, [cardId]);
 
-  const handleEditClick = () => {
+  useEffect(() => {
     if (cardData) {
       setEditData({
-        title: cardData.title,
-        youtube_video_id: cardData.youtube_video_id,
+        ...editData,
+        // TODO : 썸네일 파일 수정
+        youtube_thumbnail_link: cardData.calendar_thumbnail || "",
+        youtube_video_id: cardData.youtube_video_id || "",
+        title: cardData.title || "",
+        comment: cardData.comment || "",
+        comment_detail: cardData.comment_detail || "",
       });
-      setYoutubeVideoId(cardData.youtube_video_id);
-      setIsEditing(true);
     }
-  };
+  }, [cardData]);
 
   const handleSave = async () => {
     if (!user?.userId || !cardData) return;
@@ -133,6 +144,29 @@ const CalendarCardPage = () => {
     }
   };
 
+  const handleCommentChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+    field: "comment" | "comment_detail"
+  ) => {
+    const newValue = e.target.value;
+    setEditData((prev) => ({ ...prev, [field]: newValue }));
+
+    // 자동 저장
+    // try {
+    //   if (user?.userId && cardData) {
+    //     await updateCalendarCard(
+    //       user.accessToken || "",
+    //       user.userId,
+    //       Number(cardId),
+    //       { ...editData, [field]: newValue }
+    //     );
+    //   }
+    // } catch (error) {
+    //   console.error("댓글 업데이트 실패:", error);
+    // }
+  };
+  console.log("editData", editData);
+
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>에러 발생: {error.message}</div>;
   if (!cardData) return <div>데이터를 찾을 수 없습니다.</div>;
@@ -140,162 +174,92 @@ const CalendarCardPage = () => {
   return (
     <Layout>
       <Container>
-        <HeaderSection>
-          {user && !isEditing ? (
-            <>
-              <SearchContainer>
-                <SearchInput
-                  value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="노래 검색..."
-                  disabled={isSearching}
+        <CardWrapper>
+          <ThumbnailContainer onClick={() => setIsVideoPlaying(true)}>
+            {!isVideoPlaying ? (
+              <ThumbnailImage src={thumbnailUrl} alt="YouTube Thumbnail" />
+            ) : (
+              <YoutubeEmbed>
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={`https://www.youtube.com/embed/${cardData.youtube_video_id}?enablejsapi=1&autoplay=1&mute=1&rel=0`}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
                 />
-                <Button
-                  variant="register"
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                >
-                  {isSearching ? "검색 중..." : "검색"}
-                </Button>
+              </YoutubeEmbed>
+            )}
+          </ThumbnailContainer>
+
+          <ContentInfo>
+            <Active1Icon variant="detail" />
+            <Text variant="heading">{cardData.title}</Text>
+          </ContentInfo>
+
+          {user && (
+            <HeaderSection>
+              <SearchContainer>
+                <SearchInputWrapper>
+                  <IconWrapper>
+                    <SongChangeIcon />
+                  </IconWrapper>
+                  <SearchInput
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    placeholder="노래 검색..."
+                    disabled={isSearching}
+                  />
+                </SearchInputWrapper>
               </SearchContainer>
-              <ButtonGroup>
-                <Button
-                  variant="export"
-                  onClick={() => setIsShareModalOpen(true)}
-                >
-                  내보내기
-                </Button>
-                <Button variant="register" onClick={handleEditClick}>
-                  수정하기
-                </Button>
-              </ButtonGroup>
-            </>
-          ) : user && isEditing ? (
-            <ButtonGroup>
-              <Button variant="register" onClick={handleSave}>
-                저장
-              </Button>
-              <Button variant="register" onClick={() => setIsEditing(false)}>
-                취소
-              </Button>
-            </ButtonGroup>
-          ) : null}
-        </HeaderSection>
-
-        {isSearching ? (
-          <SearchResults>
-            <SearchResultItem>
-              <SearchResultTitle>검색 중...</SearchResultTitle>
-            </SearchResultItem>
-          </SearchResults>
-        ) : (
-          searchResults.length > 0 && (
-            <SearchResults>
-              {searchResults.map((result) => (
-                <SearchResultItem key={result.youtube_video_id}>
-                  <div>
-                    <SearchResultTitle>{result.title}</SearchResultTitle>
-                  </div>
-                  <Button
-                    onClick={() =>
-                      handleSelectVideo(result.youtube_video_id, result.title)
-                    }
-                    variant="select"
-                  >
-                    선택
-                  </Button>
-                </SearchResultItem>
-              ))}
-            </SearchResults>
-          )
-        )}
-
-        <SongInfo>
-          {isEditing ? (
-            <>
-              <Input
-                value={editData.title}
-                onChange={(e) =>
-                  setEditData((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder="제목을 입력하세요"
-              />
-            </>
-          ) : (
-            <Title>{cardData.title}</Title>
+            </HeaderSection>
           )}
 
-          <YoutubeEmbed>
-            <iframe
-              width="560"
-              height="315"
-              src={`https://www.youtube.com/embed/${
-                isEditing ? youtubeVideoId : cardData.youtube_video_id
-              }?modestbranding=1&rel=0`}
-              allowFullScreen
-            />
-          </YoutubeEmbed>
+          {isSearching ? (
+            <SearchResults>
+              <SearchResultItem>
+                <SearchResultTitle>검색 중...</SearchResultTitle>
+              </SearchResultItem>
+            </SearchResults>
+          ) : (
+            searchResults.length > 0 && (
+              <SearchResults>
+                {searchResults.map((result) => (
+                  <SearchResultItem key={result.youtube_video_id}>
+                    <div>
+                      <SearchResultTitle>{result.title}</SearchResultTitle>
+                    </div>
+                    <Button
+                      onClick={() =>
+                        handleSelectVideo(result.youtube_video_id, result.title)
+                      }
+                      variant="select"
+                    >
+                      선택
+                    </Button>
+                  </SearchResultItem>
+                ))}
+              </SearchResults>
+            )
+          )}
 
-          <CommentSection>
-            <CommentTitle>코멘트</CommentTitle>
-            <textarea
-              value={isEditing ? editData.comment : cardData.comment}
-              onChange={
-                isEditing
-                  ? (e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        comment: e.target.value,
-                      }))
-                  : undefined
-              }
-              readOnly={!isEditing}
-              maxLength={200}
-              placeholder={isEditing ? "코멘트를 입력하세요" : ""}
-            />
-            <CommentLength>
-              {(isEditing ? editData.comment : cardData.comment)?.length || 0}
-              /200
-            </CommentLength>
-
-            <CommentTitle style={{ marginTop: "1rem" }}>
-              상세 코멘트
-            </CommentTitle>
-            <textarea
-              value={
-                isEditing ? editData.comment_detail : cardData.comment_detail
-              }
-              onChange={
-                isEditing
-                  ? (e) =>
-                      setEditData((prev) => ({
-                        ...prev,
-                        comment_detail: e.target.value,
-                      }))
-                  : undefined
-              }
-              readOnly={!isEditing}
-              maxLength={1000}
-              placeholder={isEditing ? "상세 코멘트를 입력하세요" : ""}
-            />
-            <CommentLength>
-              {(isEditing ? editData.comment_detail : cardData.comment_detail)
-                ?.length || 0}
-              /1000
-            </CommentLength>
-          </CommentSection>
-        </SongInfo>
-
-        <ShareModal
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          shareUrl={shareUrl}
-          onCopyLink={handleCopyLink}
-          onSaveImage={handleSaveImage}
-          onShareSNS={handleShareSNS}
-          thumbnailUrl={`https://img.youtube.com/vi/${cardData?.youtube_video_id}/maxresdefault.jpg`}
-        />
+          <CommentWrapper>
+            <CommentContainer>
+              <CommentInput
+                placeholder="오늘의 코멘트"
+                value={editData.comment}
+                onChange={(e) => handleCommentChange(e, "comment")}
+              />
+              <CommentDetailInput
+                placeholder="내용을 자유롭게 남겨주세요"
+                value={editData.comment_detail}
+                onChange={(e) => handleCommentChange(e, "comment_detail")}
+              />
+            </CommentContainer>
+          </CommentWrapper>
+        </CardWrapper>
       </Container>
     </Layout>
   );
@@ -304,117 +268,140 @@ const CalendarCardPage = () => {
 export default CalendarCardPage;
 
 const Container = styled.div`
-  padding: 2rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
 `;
 
-const Title = styled.h1`
-  font-size: 2rem;
-  margin-bottom: 2rem;
+const CardWrapper = styled.div`
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-const SongInfo = styled.div`
-  margin-top: 2rem;
+const ThumbnailContainer = styled.div`
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  background-color: #000;
+  cursor: pointer;
+`;
 
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+const ThumbnailImage = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+`;
+
+const PlayButtonOverlay = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  svg {
+    width: 64px;
+    height: 64px;
   }
 `;
 
 const YoutubeEmbed = styled.div`
-  margin: 1rem 0;
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 비율 */
-  height: 0;
-  overflow: hidden;
-
-  iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-`;
-
-const CommentSection = styled.div`
-  margin: 1rem 0;
-
-  textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    resize: none;
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
-    line-height: 1.5;
-
-    &:focus {
-      outline: none;
-      border-color: ${colors.grey[3]};
-    }
-
-    &::placeholder {
-      color: ${colors.grey[2]};
-    }
-  }
-`;
-
-const ThumbnailImage = styled.img`
-  margin: 1rem 0;
-
-  img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-  }
-`;
-
-const HeaderSection = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-`;
-
-const Input = styled.input`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  height: 100%;
 `;
+
+const ContentInfo = styled.div`
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const CommentWrapper = styled.div`
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const CommentContainer = styled.div`
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const CommentInput = styled.textarea`
+  width: 100%;
+  border: none;
+  resize: none;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: ${colors.black};
+  &::placeholder {
+    color: ${colors.grey[1]};
+  }
+`;
+
+const CommentDetailInput = styled(CommentInput)`
+  color: ${colors.black};
+  font-size: 16px;
+  font-weight: 500;
+  &::placeholder {
+    color: ${colors.grey[1]};
+  }
+`;
+
+const HeaderSection = styled.div``;
 
 const SearchContainer = styled.div`
   display: flex;
   gap: 1rem;
+  width: 100%;
+`;
+
+const SearchInputWrapper = styled.div`
+  position: relative;
   flex: 1;
-  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+`;
+
+const IconWrapper = styled.div`
+  position: absolute;
+  left: 12px;
+  display: flex;
+  align-items: center;
 `;
 
 const SearchInput = styled.input`
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  width: 100%;
+  padding: 0.75rem;
+  padding-left: 40px;
+  border: 1px solid ${colors.grey[2]};
+  border-radius: 8px;
   font-size: 1rem;
+
+  &::placeholder {
+    color: ${colors.grey[2]};
+  }
 `;
 
 const SearchResults = styled.div`
-  margin-top: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  max-height: 400px;
-  overflow-y: auto;
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 `;
 
 const SearchResultItem = styled.div`
@@ -422,7 +409,8 @@ const SearchResultItem = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid ${colors.grey[1]};
+
   &:last-child {
     border-bottom: none;
   }
@@ -431,18 +419,4 @@ const SearchResultItem = styled.div`
 const SearchResultTitle = styled.div`
   font-size: 1rem;
   margin-right: 1rem;
-`;
-
-const CommentTitle = styled.h3`
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  color: ${colors.black};
-`;
-
-const CommentLength = styled.span`
-  display: block;
-  text-align: right;
-  color: ${colors.grey[3]};
-  font-size: 0.9rem;
-  margin-top: 0.25rem;
 `;
