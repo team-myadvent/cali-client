@@ -39,7 +39,7 @@ const StyledText = styled.span<StyledTextProps>`
   ${({ variant }) => getTextStyle(variant)}
 `;
 
-type ColorKeys = keyof typeof colors | `brown.${keyof typeof colors.brown}`;
+type ColorKeys = keyof typeof colors | `${keyof typeof colors}.${string}`;
 
 interface TextProps extends StyledTextProps {
   children: ReactNode;
@@ -62,9 +62,9 @@ export const Text = ({
     if (colorKey.includes(".")) {
       const [category, key] = colorKey.split(".") as [
         keyof typeof colors,
-        keyof typeof colors.brown
+        keyof (typeof colors)[keyof typeof colors]
       ];
-      return colors[category][key];
+      return (colors[category] as Record<string, string>)[key];
     }
     return colors[colorKey as keyof typeof colors] as string;
   };

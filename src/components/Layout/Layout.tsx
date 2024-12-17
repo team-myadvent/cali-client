@@ -2,6 +2,9 @@ import { useAuth } from "@/hooks/useAuth";
 import styled from "@emotion/styled";
 import { useRouter } from "next/router";
 import Button from "../common/Button";
+import LogoIcon from "../common/icons/LogoIcon";
+import LogoutIcon from "../common/icons/LogoutIcon";
+import LoginIcon from "../common/icons/LoginIcon";
 import { colors } from "@/styles/colors";
 
 interface LayoutProps {
@@ -9,16 +12,17 @@ interface LayoutProps {
 }
 
 const Container = styled.div`
-  padding-top: 60px;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  // TODO : mobile 일 경우 8px 20px 적용해야함 isMobile?
+  padding: 48px 60px 8px 60px;
 `;
 
 const Main = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 48px);
 `;
 
 const Header = styled.header`
@@ -29,17 +33,11 @@ const Header = styled.header`
   height: 48px;
   display: flex;
   justify-content: space-between;
+  background-color: ${colors.beige};
   align-items: center;
-  padding: 0.375rem 2rem;
-  background-color: white;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const Logo = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
+  // TODO : mobile 일 경우 8px 20px 적용해야함 isMobile?
+  padding: 8px 60px;
 `;
 
 const ProfileSection = styled.div`
@@ -70,15 +68,11 @@ const FooterLink = styled.a`
     color: #0070f3;
   }
 `;
-const UserProfile = styled.div`
+
+const HeaderActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-`;
-
-const UserNickname = styled.span`
-  font-weight: 500;
-  color: ${colors.brown[5]};
+  gap: 20px;
 `;
 
 const Layout = ({ children }: LayoutProps) => {
@@ -95,38 +89,53 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <Container>
+    <>
       <Header>
-        <Logo onClick={handleLogoClick}>cali</Logo>
+        <LogoIcon
+          style={{
+            cursor: "pointer",
+          }}
+          onClick={handleLogoClick}
+        />
         {!isLoginPage && (
           <ProfileSection>
             {isAuthenticated ? (
-              <UserProfile>
-                <UserNickname>{user?.username || "사용자"}</UserNickname>
-                <Button variant="export" onClick={logout}>
+              <HeaderActions>
+                <Button
+                  variant="iconText"
+                  icon={<LogoutIcon />}
+                  onClick={logout}
+                >
                   로그아웃
                 </Button>
-              </UserProfile>
+                <Button variant="export">공유하기</Button>
+              </HeaderActions>
             ) : (
-              <Button variant="export" onClick={handleLoginClick}>
+              <Button
+                variant="iconText"
+                icon={<LoginIcon />}
+                onClick={handleLoginClick}
+              >
                 로그인
               </Button>
             )}
           </ProfileSection>
         )}
       </Header>
-      <Main>{children}</Main>
-      <Footer>
-        <FooterContent>
-          <p>© 2024 Cali. All rights reserved.</p>
-          <FooterLinks>
-            <FooterLink href="/terms">이용약관</FooterLink>
-            <FooterLink href="/privacy">개인정보처리방침</FooterLink>
-            <FooterLink href="/contact">문의하기</FooterLink>
-          </FooterLinks>
-        </FooterContent>
-      </Footer>
-    </Container>
+      <Container>
+        <Main>{children}</Main>
+        <Footer>
+          <FooterContent>
+            <p>© 2024 Cali. All rights reserved.</p>
+            <FooterLinks>
+              <FooterLink href="/terms">이용약관</FooterLink>
+              <FooterLink href="/privacy">개인정보처리방침</FooterLink>
+              <FooterLink href="/contact">문의하기</FooterLink>
+            </FooterLinks>
+          </FooterContent>
+        </Footer>
+      </Container>
+    </>
   );
 };
 
