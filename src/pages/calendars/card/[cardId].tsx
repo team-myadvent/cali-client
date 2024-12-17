@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useCalendarCard } from "@/hooks/useCalendarCard";
 import { updateCalendarCard } from "@/api/calendar";
 import { useRouter } from "next/router";
@@ -11,7 +12,6 @@ import Button from "@/components/common/Button";
 import { YoutubeVideo } from "@/types/serach";
 import { colors } from "@/styles/colors";
 import { useShare } from "@/hooks/useShare";
-import ShareModal from "@/components/common/ShareModal";
 import React from "react";
 import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
 import { Text } from "@/components/common/Text";
@@ -21,6 +21,8 @@ import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 // TODO : throttle / debounce 적용하기
 
 const CalendarCardPage = () => {
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+  const commentDetailRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const { cardId } = router.query;
   const { user } = useAuth();
@@ -28,8 +30,6 @@ const CalendarCardPage = () => {
     user?.userId,
     Number(cardId)
   );
-
-  console.log("cardData", cardData);
 
   const {
     isShareModalOpen,
@@ -44,21 +44,13 @@ const CalendarCardPage = () => {
     baseUrl: `https://dev.myadvent-calendar.com/calendars/card/${cardId}`,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [youtubeVideoId, setYoutubeVideoId] = useState("");
-  const [editData, setEditData] = useState<UpdateCalendarCardItem>({
-    title: "",
-    youtube_video_id: "",
-    comment: "",
-    comment_detail: "",
-  });
+  const [editData, setEditData] = useState<UpdateCalendarCardItem>();
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const { day } = router.query; // URL에서 day 파라미터 가져오기
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
+  const thumbnailUrl = `https://img.youtube.com/vi/${cardData?.youtube_video_id}/maxresdefault.jpg`;
 
   useEffect(() => {
     if (cardId && isNaN(Number(cardId))) {
@@ -68,35 +60,16 @@ const CalendarCardPage = () => {
 
   useEffect(() => {
     if (cardData) {
-      setEditData({
-        ...editData,
-        // TODO : 썸네일 파일 수정
+      setEditData((prevEditData) => ({
+        ...prevEditData,
         youtube_thumbnail_link: cardData.calendar_thumbnail || "",
         youtube_video_id: cardData.youtube_video_id || "",
         title: cardData.title || "",
         comment: cardData.comment || "",
         comment_detail: cardData.comment_detail || "",
-      });
+      }));
     }
   }, [cardData]);
-
-  const handleSave = async () => {
-    if (!user?.userId || !cardData) return;
-
-    try {
-      await updateCalendarCard(
-        user?.accessToken || "",
-        user?.userId,
-        Number(cardId),
-        editData
-      );
-      setIsEditing(false);
-      router.reload();
-    } catch (error) {
-      console.error("업데이트 실패:", error);
-      alert("저장 중 오류가 발생했습니다.");
-    }
-  };
 
   const handleSearch = async () => {
     if (!searchKeyword.trim()) return;
@@ -131,7 +104,6 @@ const CalendarCardPage = () => {
         updateData
       );
 
-      setYoutubeVideoId(videoId);
       setEditData(updateData);
       setSearchResults([]);
       setSearchKeyword("");
@@ -144,28 +116,38 @@ const CalendarCardPage = () => {
     }
   };
 
-  const handleCommentChange = async (
+  const handleCommentChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
     field: "comment" | "comment_detail"
   ) => {
     const newValue = e.target.value;
     setEditData((prev) => ({ ...prev, [field]: newValue }));
-
-    // 자동 저장
-    // try {
-    //   if (user?.userId && cardData) {
-    //     await updateCalendarCard(
-    //       user.accessToken || "",
-    //       user.userId,
-    //       Number(cardId),
-    //       { ...editData, [field]: newValue }
-    //     );
-    //   }
-    // } catch (error) {
-    //   console.error("댓글 업데이트 실패:", error);
-    // }
   };
-  console.log("editData", editData);
+
+  const handleCommentKeyDown = async (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    field: "comment" | "comment_detail"
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const newValue = (e.target as HTMLTextAreaElement).value;
+
+      if (user?.userId && cardData) {
+        try {
+          await updateCalendarCard(
+            user.accessToken || "",
+            user.userId,
+            Number(cardId),
+            { ...editData, [field]: newValue }
+          );
+          // ref를 통한 포커스 아웃
+          commentRef.current?.blur();
+        } catch (error) {
+          console.error("댓글 업데이트 실패:", error);
+        }
+      }
+    }
+  };
 
   const GuestbookSection = () => {
     const [guestbookInput, setGuestbookInput] = useState({
@@ -292,21 +274,26 @@ const CalendarCardPage = () => {
           ) : (
             searchResults.length > 0 && (
               <SearchResults>
-                {searchResults.map((result) => (
-                  <SearchResultItem key={result.youtube_video_id}>
-                    <div>
-                      <SearchResultTitle>{result.title}</SearchResultTitle>
-                    </div>
-                    <Button
-                      onClick={() =>
-                        handleSelectVideo(result.youtube_video_id, result.title)
-                      }
-                      variant="select"
-                    >
-                      선택
-                    </Button>
-                  </SearchResultItem>
-                ))}
+                {searchResults.map((result) => {
+                  return (
+                    <SearchResultItem key={result.youtube_video_id}>
+                      <div>
+                        <SearchResultTitle>{result.title}</SearchResultTitle>
+                      </div>
+                      <Button
+                        onClick={() =>
+                          handleSelectVideo(
+                            result.youtube_video_id,
+                            result.title
+                          )
+                        }
+                        variant="select"
+                      >
+                        선택
+                      </Button>
+                    </SearchResultItem>
+                  );
+                })}
               </SearchResults>
             )
           )}
@@ -314,14 +301,18 @@ const CalendarCardPage = () => {
           <CommentWrapper>
             <CommentContainer>
               <CommentInput
+                ref={commentRef}
                 placeholder="오늘의 코멘트"
-                value={editData.comment}
+                value={editData?.comment || ""}
                 onChange={(e) => handleCommentChange(e, "comment")}
+                onKeyDown={(e) => handleCommentKeyDown(e, "comment")}
               />
               <CommentDetailInput
+                ref={commentDetailRef}
                 placeholder="내용을 자유롭게 남겨주세요"
-                value={editData.comment_detail}
+                value={editData?.comment_detail}
                 onChange={(e) => handleCommentChange(e, "comment_detail")}
+                onKeyPress={(e) => handleCommentKeyDown(e, "comment_detail")}
               />
             </CommentContainer>
           </CommentWrapper>

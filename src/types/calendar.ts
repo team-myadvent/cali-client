@@ -23,6 +23,6 @@ export interface UpdateCalendarCardItem {
   comment?: string;
   comment_detail?: string;
   youtube_video_id?: string;
-  thumbnail_file?: File;
+  thumbnail_file?: File | null;
   youtube_thumbnail_link?: string;
 }
