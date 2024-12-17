@@ -7,13 +7,16 @@ import EditProfileModal from "./EditProfileModal";
 import { useAuth } from "@/hooks/useAuth";
 
 const ProfileSection = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSubmit = (newName: string) => {
-    // if (onUpdateUsername) {
-    //   onUpdateUsername(newName);
-    // }
+  const handleProfileUpdate = (newName: string) => {
+    if (user) {
+      setUser({
+        ...user,
+        username: newName
+      });
+    }
   };
 
   return (
@@ -30,7 +33,7 @@ const ProfileSection = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         username={user?.username}
-        onSubmit={handleSubmit}
+        onSubmit={handleProfileUpdate}
       />
     </Container>
   );
