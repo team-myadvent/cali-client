@@ -16,6 +16,8 @@ import React from "react";
 import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
 import { Text } from "@/components/common/Text";
 import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
+import EditIcon from "@/components/common/icons/EditIcon";
+import DeleteIcon from "@/components/common/icons/DeleteIcon";
 
 // TODO : input 컴포넌트 만들어서 사용하기
 
@@ -99,6 +101,7 @@ const CalendarCardPage = () => {
         ...editData,
         title: title,
         youtube_video_id: videoId,
+        youtube_thumbnail_link: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
       };
 
       await updateCalendarCard(
@@ -196,7 +199,7 @@ const CalendarCardPage = () => {
         comment: editData.comment || "",
         comment_detail: editData.comment_detail || "",
         youtube_video_id: editData.youtube_video_id || "",
-        youtube_thumbnail_link: editData.youtube_thumbnail_link || "",
+        youtube_thumbnail_link: `https://img.youtube.com/vi/${editData.youtube_video_id}/maxresdefault.jpg`,
         thumbnail_file: null,
       };
 
@@ -227,13 +230,13 @@ const CalendarCardPage = () => {
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최��캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
@@ -296,19 +299,27 @@ const CalendarCardPage = () => {
                   <PlayButton onClick={() => setIsVideoPlaying(true)}>
                     ▶
                   </PlayButton>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleCoverEdit}
-                    accept="image/*"
-                    style={{ display: "none" }}
-                  />
-                  <CoverButton onClick={() => fileInputRef.current?.click()}>
-                    커버 수정
-                  </CoverButton>
-                  <CoverButton onClick={handleCoverDelete}>
-                    커버 삭제
-                  </CoverButton>
+                  {user && (
+                    <CoverButtonGroup>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleCoverEdit}
+                        accept="image/*"
+                        style={{ display: "none" }}
+                      />
+                      <CoverButton
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <EditIcon width={14} height={14} color="#6F6E6E" />
+                        커버 수정
+                      </CoverButton>
+                      <CoverButton onClick={handleCoverDelete}>
+                        <DeleteIcon color="#6F6E6E" />
+                        커버 삭제
+                      </CoverButton>
+                    </CoverButtonGroup>
+                  )}
                 </ButtonOverlay>
               </>
             ) : (
@@ -421,30 +432,11 @@ const Container = styled.div`
   gap: 20px;
 `;
 
-const ButtonOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  opacity: 0;
-  transition: opacity 0.2s;
-`;
-
 const ThumbnailContainer = styled.div`
   position: relative;
   width: 100%;
   padding-top: 56.25%;
   background-color: #000;
-  cursor: pointer;
-
-  &:hover ${ButtonOverlay} {
-    opacity: 1;
-  }
 `;
 
 const CardWrapper = styled.div`
@@ -677,23 +669,38 @@ const PlayButton = styled.button`
   justify-content: center;
   align-items: center;
   color: white;
+  font-size: 24px;
+`;
+
+const ButtonOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; // 중앙 정렬로 변경
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+`;
+
+const CoverButtonGroup = styled.div`
+  position: absolute; // 절대 위치로 변경
+  bottom: 16px; // 하단에서의 간격
+  right: 16px; // 우측에서의 간격
+  display: flex;
+  gap: 8px; // 버튼 사이 간격
 `;
 
 const CoverButton = styled.button`
-  position: absolute;
-  bottom: 16px;
   padding: 8px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.6);
   border: none;
   cursor: pointer;
   font-size: 14px;
-
-  &:first-of-type {
-    right: 120px;
-  }
-
-  &:last-of-type {
-    right: 16px;
-  }
+  display: flex; // flex 추가
+  align-items: center; // 수직 중앙 정렬
+  justify-content: center; // 수평 중앙 정렬
+  gap: 4px; // 아이콘과 텍스트 사이 간격
 `;
