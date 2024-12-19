@@ -187,6 +187,33 @@ const CalendarCardPage = () => {
     }
   };
 
+  const handleCoverDelete = async () => {
+    if (!user?.userId || !cardData || !editData) return;
+
+    try {
+      const updateData: UpdateCalendarCardItem = {
+        title: editData.title || "",
+        comment: editData.comment || "",
+        comment_detail: editData.comment_detail || "",
+        youtube_video_id: editData.youtube_video_id || "",
+        youtube_thumbnail_link: editData.youtube_thumbnail_link || "",
+        thumbnail_file: null,
+      };
+
+      await updateCalendarCard(
+        user.accessToken || "",
+        user.userId,
+        Number(cardId),
+        updateData
+      );
+
+      router.reload();
+    } catch (error) {
+      console.error("커버 삭제 실패:", error);
+      alert("커버 이미지 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
   const GuestbookSection = () => {
     const [guestbookInput, setGuestbookInput] = useState({
       author: "",
@@ -279,7 +306,7 @@ const CalendarCardPage = () => {
                   <CoverButton onClick={() => fileInputRef.current?.click()}>
                     커버 수정
                   </CoverButton>
-                  <CoverButton onClick={() => console.log("커버 삭제")}>
+                  <CoverButton onClick={handleCoverDelete}>
                     커버 삭제
                   </CoverButton>
                 </ButtonOverlay>

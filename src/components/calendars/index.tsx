@@ -120,12 +120,6 @@ interface CalendarProps {
   isBlurred: boolean;
 }
 
-interface CalendarItemProps {
-  isBlurred: boolean;
-  isActive?: boolean; // 활성화된 날짜인지 여부
-  isRed?: boolean; // 빨간색 스탬프인지 초록색 스탬프인지
-}
-
 const Calendar = ({ isBlurred }: CalendarProps) => {
   const router = useRouter();
   const { calendarData, error, imageErrors, handleImageError } = useCalendar();
@@ -169,7 +163,6 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
       {calendarData.map((dayData) => {
         const day = formatCalendarDate(dayData.calendar_dt).day;
         const shouldBlur = isBlurred || isDateBlurred(dayData.calendar_dt);
-        const thumbnailUrl = getThumbnailUrl(dayData);
 
         // 해당 날짜의 아이콘 컴포넌트 선택
         const IconComponent = shouldBlur
@@ -188,7 +181,9 @@ const Calendar = ({ isBlurred }: CalendarProps) => {
             <ThumbnailWrapper isBlurred={shouldBlur}>
               <img
                 src={
-                  imageErrors.has(day) ? "/default_thumbnail.png" : thumbnailUrl
+                  imageErrors.has(day)
+                    ? "/default_thumbnail.png"
+                    : dayData.calendar_thumbnail
                 }
                 alt={`Day ${day} thumbnail`}
                 loading="lazy"
