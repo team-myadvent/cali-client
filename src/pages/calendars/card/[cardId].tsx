@@ -18,7 +18,6 @@ import { Text } from "@/components/common/Text";
 import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 
 // TODO : input 컴포넌트 만들어서 사용하기
-// TODO : throttle / debounce 적용하기
 
 const CalendarCardPage = () => {
   const commentRef = useRef<HTMLTextAreaElement>(null);
@@ -162,25 +161,25 @@ const CalendarCardPage = () => {
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애��롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           {/* 다른 방명록 아이템들... */}
@@ -223,9 +222,22 @@ const CalendarCardPage = () => {
     <Layout>
       <Container>
         <CardWrapper>
-          <ThumbnailContainer onClick={() => setIsVideoPlaying(true)}>
+          <ThumbnailContainer>
             {!isVideoPlaying ? (
-              <ThumbnailImage src={thumbnailUrl} alt="YouTube Thumbnail" />
+              <>
+                <ThumbnailImage src={thumbnailUrl} alt="YouTube Thumbnail" />
+                <ButtonOverlay>
+                  <PlayButton onClick={() => setIsVideoPlaying(true)}>
+                    ▶
+                  </PlayButton>
+                  <CoverButton onClick={() => console.log("커버 수정")}>
+                    커버 수정
+                  </CoverButton>
+                  <CoverButton onClick={() => console.log("커버 삭제")}>
+                    커버 삭제
+                  </CoverButton>
+                </ButtonOverlay>
+              </>
             ) : (
               <YoutubeEmbed>
                 <iframe
@@ -336,12 +348,18 @@ const Container = styled.div`
   gap: 20px;
 `;
 
-const CardWrapper = styled.div`
+const ButtonOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.2s;
 `;
 
 const ThumbnailContainer = styled.div`
@@ -350,6 +368,18 @@ const ThumbnailContainer = styled.div`
   padding-top: 56.25%;
   background-color: #000;
   cursor: pointer;
+
+  &:hover ${ButtonOverlay} {
+    opacity: 1;
+  }
+`;
+
+const CardWrapper = styled.div`
+  width: 100%;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 const ThumbnailImage = styled.img`
@@ -360,17 +390,6 @@ const ThumbnailImage = styled.img`
   height: 100%;
   object-fit: contain;
   background-color: #000;
-`;
-
-const PlayButtonOverlay = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  svg {
-    width: 64px;
-    height: 64px;
-  }
 `;
 
 const YoutubeEmbed = styled.div`
@@ -571,5 +590,37 @@ const SubmitButton = styled.button`
 
   &:hover {
     background: #f39599;
+  }
+`;
+
+const PlayButton = styled.button`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+`;
+
+const CoverButton = styled.button`
+  position: absolute;
+  bottom: 16px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+
+  &:first-of-type {
+    right: 120px;
+  }
+
+  &:last-of-type {
+    right: 16px;
   }
 `;
