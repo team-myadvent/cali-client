@@ -20,6 +20,7 @@ import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 // TODO : input 컴포넌트 만들어서 사용하기
 
 const CalendarCardPage = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const commentRef = useRef<HTMLTextAreaElement>(null);
   const commentDetailRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
@@ -49,8 +50,12 @@ const CalendarCardPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${cardData?.youtube_video_id}/maxresdefault.jpg`;
-
+  // thumbnail_file 이 있을 때 먼저 thumbnail_file 을 사용하고 없으면 calendar_thumbnail 을 사용
+  const thumbnailUrl = cardData?.thumbnail_file
+    ? cardData.thumbnail_file
+    : cardData?.calendar_thumbnail
+    ? cardData.calendar_thumbnail
+    : undefined;
   useEffect(() => {
     if (cardId && isNaN(Number(cardId))) {
       router.push("/404");
@@ -59,14 +64,14 @@ const CalendarCardPage = () => {
 
   useEffect(() => {
     if (cardData) {
-      setEditData((prevEditData) => ({
-        ...prevEditData,
+      setEditData({
         youtube_thumbnail_link: cardData.calendar_thumbnail || "",
         youtube_video_id: cardData.youtube_video_id || "",
         title: cardData.title || "",
         comment: cardData.comment || "",
         comment_detail: cardData.comment_detail || "",
-      }));
+        thumbnail_file: null,
+      });
     }
   }, [cardData]);
 
@@ -148,6 +153,40 @@ const CalendarCardPage = () => {
     }
   };
 
+  const handleCoverEdit = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.userId || !cardData || !editData) return;
+
+    try {
+      console.log("Current editData:", editData);
+
+      const updateData: UpdateCalendarCardItem = {
+        title: editData.title || "",
+        comment: editData.comment || "",
+        comment_detail: editData.comment_detail || "",
+        youtube_video_id: editData.youtube_video_id || "",
+        youtube_thumbnail_link: editData.youtube_thumbnail_link || "",
+        thumbnail_file: file,
+      };
+
+      console.log("Sending updateData:", updateData);
+
+      await updateCalendarCard(
+        user.accessToken || "",
+        user.userId,
+        Number(cardId),
+        updateData
+      );
+
+      router.reload();
+    } catch (error) {
+      console.error("커버 업데이트 실패:", error);
+      alert("커버 이미지 업데이트 중 오류가 발생했습니다.");
+    }
+  };
+
   const GuestbookSection = () => {
     const [guestbookInput, setGuestbookInput] = useState({
       author: "",
@@ -161,13 +200,13 @@ const CalendarCardPage = () => {
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애��롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
             <GuestbookAuthor>캘리짱</GuestbookAuthor>
             <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
+              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
             </GuestbookContent>
           </GuestbookItem>
           <GuestbookItem>
@@ -230,7 +269,14 @@ const CalendarCardPage = () => {
                   <PlayButton onClick={() => setIsVideoPlaying(true)}>
                     ▶
                   </PlayButton>
-                  <CoverButton onClick={() => console.log("커버 수정")}>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleCoverEdit}
+                    accept="image/*"
+                    style={{ display: "none" }}
+                  />
+                  <CoverButton onClick={() => fileInputRef.current?.click()}>
                     커버 수정
                   </CoverButton>
                   <CoverButton onClick={() => console.log("커버 삭제")}>

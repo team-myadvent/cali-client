@@ -58,9 +58,41 @@ export const updateCalendarCard = async (
   data: UpdateCalendarCardItem
 ) => {
   const url = `${API_BASE_URL}${API_ENDPOINTS.CALENDAR.CARD}/${userId}/${idx}`;
-  return request<CalendarCardResponse>(url, {
-    method: API_METHODS.PUT,
-    accessToken,
-    body: JSON.stringify(data),
-  });
+
+  // 파일이 있는 경우와 없는 경우를 구분
+  if (data.thumbnail_file) {
+    const formData = new FormData();
+    formData.append("thumbnail_file", data.thumbnail_file);
+
+    // 나머지 데이터는 JSON 문자열로 변환하여 추가
+    const jsonData = {
+      title: data.title,
+      comment: data.comment,
+      comment_detail: data.comment_detail,
+      youtube_video_id: data.youtube_video_id,
+      youtube_thumbnail_link: data.youtube_thumbnail_link,
+    };
+
+    formData.append("data", JSON.stringify(jsonData));
+
+    return request<CalendarCardResponse>(url, {
+      method: API_METHODS.PUT,
+      accessToken,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: formData,
+    });
+  } else {
+    // 파일이 없는 경우는 일반 JSON으로 전송
+    return request<CalendarCardResponse>(url, {
+      method: API_METHODS.PUT,
+      accessToken,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  }
 };

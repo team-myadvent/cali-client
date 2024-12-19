@@ -16,6 +16,7 @@ export interface CalendarCardItem {
   comment_detail: string;
   youtube_video_id: string;
   calendar_thumbnail: string;
+  thumbnail_file: string | null;
 }
 
 export interface UpdateCalendarCardItem {
