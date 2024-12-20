@@ -1,13 +1,12 @@
 interface RequestOptions extends RequestInit {
   accessToken?: string;
 }
-
+//TODO : 헤더 설정 추가
 async function request<T>(
   url: string,
   { accessToken, ...options }: RequestOptions = {}
 ): Promise<T> {
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
 
   if (accessToken) {
     headers.set("Authorization", `Bearer ${accessToken}`);

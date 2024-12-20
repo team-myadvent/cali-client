@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useCalendarCard } from "@/hooks/useCalendarCard";
 import { updateCalendarCard } from "@/api/calendar";
 import { useRouter } from "next/router";
@@ -11,16 +12,20 @@ import Button from "@/components/common/Button";
 import { YoutubeVideo } from "@/types/serach";
 import { colors } from "@/styles/colors";
 import { useShare } from "@/hooks/useShare";
-import ShareModal from "@/components/common/ShareModal";
 import React from "react";
 import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
 import { Text } from "@/components/common/Text";
 import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
+import EditIcon from "@/components/common/icons/EditIcon";
+import DeleteIcon from "@/components/common/icons/DeleteIcon";
+import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
 
 // TODO : input 컴포넌트 만들어서 사용하기
-// TODO : throttle / debounce 적용하기
 
 const CalendarCardPage = () => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const commentRef = useRef<HTMLTextAreaElement>(null);
+  const commentDetailRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const { cardId } = router.query;
   const { user } = useAuth();
@@ -28,8 +33,6 @@ const CalendarCardPage = () => {
     user?.userId,
     Number(cardId)
   );
-
-  console.log("cardData", cardData);
 
   const {
     isShareModalOpen,
@@ -44,22 +47,18 @@ const CalendarCardPage = () => {
     baseUrl: `https://dev.myadvent-calendar.com/calendars/card/${cardId}`,
   });
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [youtubeVideoId, setYoutubeVideoId] = useState("");
-  const [editData, setEditData] = useState<UpdateCalendarCardItem>({
-    title: "",
-    youtube_video_id: "",
-    comment: "",
-    comment_detail: "",
-  });
+  const [editData, setEditData] = useState<UpdateCalendarCardItem>();
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<YoutubeVideo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const { day } = router.query; // URL에서 day 파라미터 가져오기
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${youtubeVideoId}/maxresdefault.jpg`;
-
+  // thumbnail_file 이 있을 때 먼저 thumbnail_file 을 사용하고 없으면 calendar_thumbnail 을 사용
+  const thumbnailUrl = cardData?.thumbnail_file
+    ? cardData.thumbnail_file
+    : cardData?.calendar_thumbnail
+    ? cardData.calendar_thumbnail
+    : undefined;
   useEffect(() => {
     if (cardId && isNaN(Number(cardId))) {
       router.push("/404");
@@ -69,34 +68,15 @@ const CalendarCardPage = () => {
   useEffect(() => {
     if (cardData) {
       setEditData({
-        ...editData,
-        // TODO : 썸네일 파일 수정
         youtube_thumbnail_link: cardData.calendar_thumbnail || "",
         youtube_video_id: cardData.youtube_video_id || "",
         title: cardData.title || "",
         comment: cardData.comment || "",
         comment_detail: cardData.comment_detail || "",
+        thumbnail_file: null,
       });
     }
   }, [cardData]);
-
-  const handleSave = async () => {
-    if (!user?.userId || !cardData) return;
-
-    try {
-      await updateCalendarCard(
-        user?.accessToken || "",
-        user?.userId,
-        Number(cardId),
-        editData
-      );
-      setIsEditing(false);
-      router.reload();
-    } catch (error) {
-      console.error("업데이트 실패:", error);
-      alert("저장 중 오류가 발생했습니다.");
-    }
-  };
 
   const handleSearch = async () => {
     if (!searchKeyword.trim()) return;
@@ -122,6 +102,7 @@ const CalendarCardPage = () => {
         ...editData,
         title: title,
         youtube_video_id: videoId,
+        youtube_thumbnail_link: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
       };
 
       await updateCalendarCard(
@@ -131,7 +112,6 @@ const CalendarCardPage = () => {
         updateData
       );
 
-      setYoutubeVideoId(videoId);
       setEditData(updateData);
       setSearchResults([]);
       setSearchKeyword("");
@@ -144,77 +124,170 @@ const CalendarCardPage = () => {
     }
   };
 
-  const handleCommentChange = async (
+  const handleCommentChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>,
     field: "comment" | "comment_detail"
   ) => {
     const newValue = e.target.value;
     setEditData((prev) => ({ ...prev, [field]: newValue }));
-
-    // 자동 저장
-    // try {
-    //   if (user?.userId && cardData) {
-    //     await updateCalendarCard(
-    //       user.accessToken || "",
-    //       user.userId,
-    //       Number(cardId),
-    //       { ...editData, [field]: newValue }
-    //     );
-    //   }
-    // } catch (error) {
-    //   console.error("댓글 업데이트 실패:", error);
-    // }
   };
-  console.log("editData", editData);
+
+  const handleCommentKeyDown = async (
+    e: React.KeyboardEvent<HTMLTextAreaElement>,
+    field: "comment" | "comment_detail"
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const newValue = (e.target as HTMLTextAreaElement).value;
+
+      if (user?.userId && cardData) {
+        try {
+          await updateCalendarCard(
+            user.accessToken || "",
+            user.userId,
+            Number(cardId),
+            { ...editData, [field]: newValue }
+          );
+          // ref를 통한 포커스 아웃
+          commentRef.current?.blur();
+        } catch (error) {
+          console.error("댓글 업데이트 실패:", error);
+        }
+      }
+    }
+  };
+
+  const handleCoverEdit = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.userId || !cardData || !editData) return;
+
+    try {
+      console.log("Current editData:", editData);
+
+      const updateData: UpdateCalendarCardItem = {
+        title: editData.title || "",
+        comment: editData.comment || "",
+        comment_detail: editData.comment_detail || "",
+        youtube_video_id: editData.youtube_video_id || "",
+        youtube_thumbnail_link: editData.youtube_thumbnail_link || "",
+        thumbnail_file: file,
+      };
+
+      console.log("Sending updateData:", updateData);
+
+      await updateCalendarCard(
+        user.accessToken || "",
+        user.userId,
+        Number(cardId),
+        updateData
+      );
+
+      router.reload();
+    } catch (error) {
+      console.error("커버 업데이트 실패:", error);
+      alert("커버 이미지 업데이트 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleCoverDelete = async () => {
+    if (!user?.userId || !cardData || !editData) return;
+
+    try {
+      const updateData: UpdateCalendarCardItem = {
+        title: editData.title || "",
+        comment: editData.comment || "",
+        comment_detail: editData.comment_detail || "",
+        youtube_video_id: editData.youtube_video_id || "",
+        youtube_thumbnail_link: `https://img.youtube.com/vi/${editData.youtube_video_id}/maxresdefault.jpg`,
+        thumbnail_file: null,
+      };
+
+      await updateCalendarCard(
+        user.accessToken || "",
+        user.userId,
+        Number(cardId),
+        updateData
+      );
+
+      router.reload();
+    } catch (error) {
+      console.error("커버 삭제 실패:", error);
+      alert("커버 이미지 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  interface GuestbookInput {
+    writer_name: string;
+    content: string;
+  }
 
   const GuestbookSection = () => {
-    const [guestbookInput, setGuestbookInput] = useState({
-      author: "",
+    const [guestbookInput, setGuestbookInput] = useState<GuestbookInput>({
+      writer_name: user?.username || "",
       content: "",
     });
+    const handleSubmitGuestbook = async () => {
+      if (!cardData || !guestbookInput.content) return;
+
+      try {
+        const requestData: GuestbookRequest = {
+          content: guestbookInput.content,
+          // 로그인하지 않은 경우에만 writer_name 전송
+          ...(user ? {} : { writer_name: guestbookInput.writer_name }),
+        };
+
+        await createGuestbook(
+          user?.userId || 0,
+          Number(cardId),
+          requestData,
+          user?.accessToken
+        );
+
+        // 입력 필드 초기화
+        setGuestbookInput({
+          writer_name: user?.username || "",
+          content: "",
+        });
+
+        // 성공 메시지 또는 새로고침 등 추가 처리
+        alert("방명록이 등록되었습니다.");
+      } catch (error) {
+        console.error("방명록 등록 실패:", error);
+        alert("방명록 등록에 실패했습니다.");
+      }
+    };
 
     return (
       <GuestbookWrapper>
-        <GuestbookTitle>방명록 5개</GuestbookTitle>
+        <GuestbookTitle>방명록 {cardData?.guestbooks.length}개</GuestbookTitle>
         <GuestbookList>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          {/* 다른 방명록 아이템들... */}
+          {cardData?.guestbooks.map((guestbook, index) => (
+            <GuestbookItem key={index}>
+              <GuestbookAuthor>
+                {guestbook.writer_name || "익명"}
+              </GuestbookAuthor>
+              <GuestbookContent>{guestbook.content}</GuestbookContent>
+            </GuestbookItem>
+          ))}
         </GuestbookList>
         <GuestbookInputWrapper>
           <InputContainer>
-            <AuthorInput
-              placeholder="작성자명"
-              value={guestbookInput.author}
-              onChange={(e) =>
-                setGuestbookInput((prev) => ({
-                  ...prev,
-                  author: e.target.value,
-                }))
-              }
-            />
+            {user ? (
+              <AuthorInput value={user.username} disabled />
+            ) : (
+              <AuthorInput
+                placeholder="작성자명"
+                value={guestbookInput.writer_name}
+                onChange={(e) =>
+                  setGuestbookInput((prev) => ({
+                    ...prev,
+                    writer_name: e.target.value,
+                  }))
+                }
+              />
+            )}
             <ContentInput
               placeholder="내용을 남겨주세요. (최대 100자)"
               value={guestbookInput.content}
@@ -227,7 +300,7 @@ const CalendarCardPage = () => {
               maxLength={100}
             />
           </InputContainer>
-          <SubmitButton>등록하기</SubmitButton>
+          <SubmitButton onClick={handleSubmitGuestbook}>등록하기</SubmitButton>
         </GuestbookInputWrapper>
       </GuestbookWrapper>
     );
@@ -241,9 +314,39 @@ const CalendarCardPage = () => {
     <Layout>
       <Container>
         <CardWrapper>
-          <ThumbnailContainer onClick={() => setIsVideoPlaying(true)}>
+          <ThumbnailContainer>
             {!isVideoPlaying ? (
-              <ThumbnailImage src={thumbnailUrl} alt="YouTube Thumbnail" />
+              <>
+                <ThumbnailImage src={thumbnailUrl} alt="YouTube Thumbnail" />
+                <ButtonOverlay>
+                  <PlayButton onClick={() => setIsVideoPlaying(true)}>
+                    ▶
+                  </PlayButton>
+                  {user && (
+                    <CoverButtonGroup>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleCoverEdit}
+                        accept="image/*"
+                        style={{ display: "none" }}
+                      />
+                      <CoverButton
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <EditIcon width={14} height={14} color="#6F6E6E" />
+                        커버 수정
+                      </CoverButton>
+                      {cardData.thumbnail_file && (
+                        <CoverButton onClick={handleCoverDelete}>
+                          <DeleteIcon color="#6F6E6E" />
+                          커버 삭제
+                        </CoverButton>
+                      )}
+                    </CoverButtonGroup>
+                  )}
+                </ButtonOverlay>
+              </>
             ) : (
               <YoutubeEmbed>
                 <iframe
@@ -292,21 +395,26 @@ const CalendarCardPage = () => {
           ) : (
             searchResults.length > 0 && (
               <SearchResults>
-                {searchResults.map((result) => (
-                  <SearchResultItem key={result.youtube_video_id}>
-                    <div>
-                      <SearchResultTitle>{result.title}</SearchResultTitle>
-                    </div>
-                    <Button
-                      onClick={() =>
-                        handleSelectVideo(result.youtube_video_id, result.title)
-                      }
-                      variant="select"
-                    >
-                      선택
-                    </Button>
-                  </SearchResultItem>
-                ))}
+                {searchResults.map((result) => {
+                  return (
+                    <SearchResultItem key={result.youtube_video_id}>
+                      <div>
+                        <SearchResultTitle>{result.title}</SearchResultTitle>
+                      </div>
+                      <Button
+                        onClick={() =>
+                          handleSelectVideo(
+                            result.youtube_video_id,
+                            result.title
+                          )
+                        }
+                        variant="select"
+                      >
+                        선택
+                      </Button>
+                    </SearchResultItem>
+                  );
+                })}
               </SearchResults>
             )
           )}
@@ -314,14 +422,18 @@ const CalendarCardPage = () => {
           <CommentWrapper>
             <CommentContainer>
               <CommentInput
+                ref={commentRef}
                 placeholder="오늘의 코멘트"
-                value={editData.comment}
+                value={editData?.comment || ""}
                 onChange={(e) => handleCommentChange(e, "comment")}
+                onKeyDown={(e) => handleCommentKeyDown(e, "comment")}
               />
               <CommentDetailInput
+                ref={commentDetailRef}
                 placeholder="내용을 자유롭게 남겨주세요"
-                value={editData.comment_detail}
+                value={editData?.comment_detail}
                 onChange={(e) => handleCommentChange(e, "comment_detail")}
+                onKeyPress={(e) => handleCommentKeyDown(e, "comment_detail")}
               />
             </CommentContainer>
           </CommentWrapper>
@@ -345,20 +457,19 @@ const Container = styled.div`
   gap: 20px;
 `;
 
+const ThumbnailContainer = styled.div`
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  background-color: #000;
+`;
+
 const CardWrapper = styled.div`
   width: 100%;
   background: white;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const ThumbnailContainer = styled.div`
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
-  background-color: #000;
-  cursor: pointer;
 `;
 
 const ThumbnailImage = styled.img`
@@ -369,17 +480,6 @@ const ThumbnailImage = styled.img`
   height: 100%;
   object-fit: contain;
   background-color: #000;
-`;
-
-const PlayButtonOverlay = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  svg {
-    width: 64px;
-    height: 64px;
-  }
 `;
 
 const YoutubeEmbed = styled.div`
@@ -581,4 +681,51 @@ const SubmitButton = styled.button`
   &:hover {
     background: #f39599;
   }
+`;
+
+const PlayButton = styled.button`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 24px;
+`;
+
+const ButtonOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; // 중앙 정렬로 변경
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+`;
+
+const CoverButtonGroup = styled.div`
+  position: absolute; // 절대 위치로 변경
+  bottom: 16px; // 하단에서의 간격
+  right: 16px; // 우측에서의 간격
+  display: flex;
+  gap: 8px; // 버튼 사이 간격
+`;
+
+const CoverButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; // flex 추가
+  align-items: center; // 수직 중앙 정렬
+  justify-content: center; // 수평 중앙 정렬
+  gap: 4px; // 아이콘과 텍스트 사이 간격
 `;

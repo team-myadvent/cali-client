@@ -12,6 +12,10 @@ export const API_ENDPOINTS = {
   SEARCH: {
     YOUTUBE: "/search",
   },
+  PROFILE: {
+    ME: "/profiles/me",
+  },
+  GUESTBOOK: "/guestbooks",
 };
 
 export const API_METHODS = {

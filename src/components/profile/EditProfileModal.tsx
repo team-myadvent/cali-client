@@ -4,8 +4,9 @@ import ProfileAvatar from "../common/ProfileAvatar";
 import { useState } from "react";
 import { Text } from "../common/Text";
 import Button from "../common/Button";
-
-// TODO : 이름변경시 update profile api & useAuth 적용해야함
+import { updateMyProfile } from "@/api/profile";
+import { useAuth } from "@/hooks/useAuth";
+import { User } from "@/types/user";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -20,14 +21,42 @@ const EditProfileModal = ({
   onSubmit,
 }: EditProfileModalProps) => {
   const [inputValue, setInputValue] = useState(username || "");
-
+  const { user, setUser } = useAuth();
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputValue.trim()) {
-      onSubmit(inputValue.trim());
-      onClose();
+    const trimmedName = inputValue.trim();
+    if (!trimmedName) return;
+
+    const accessToken = user?.accessToken;
+    if (!accessToken) return;
+
+    try {
+      const response = await updateMyProfile(accessToken, {
+        username: trimmedName,
+      });
+
+      if (response && response.results?.data) {
+        // 프로필 업데이트 성공 시 user 정보도 업데이트
+        setUser((prev: User | null) =>
+          prev
+            ? {
+                ...prev,
+                username: trimmedName,
+              }
+            : null
+        );
+
+        onSubmit(trimmedName);
+        onClose();
+      } else {
+        // 에러 처리 로직 (ex: toast로 에러 메시지 표시)
+        console.error("프로필 업데이트 실패");
+      }
+    } catch (error) {
+      // 에러 처리 로직 (ex: toast로 에러 메시지 표시)
+      console.error("프로필 업데이트 중 오류 발생:", error);
     }
   };
 

@@ -7,9 +7,24 @@ import { User } from "@/types/user";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useAtom(isAuthenticatedAtom);
-  const [user, setUser] = useAtom(userAtom);
+  const [user, setUserAtom] = useAtom(userAtom);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  const setUser = (
+    newUserData: User | ((prev: User | null) => User | null) | null
+  ) => {
+    const newUser =
+      typeof newUserData === "function" ? newUserData(user) : newUserData;
+
+    setUserAtom(newUser);
+
+    if (newUser) {
+      localStorage.setItem("auth", JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem("auth");
+    }
+  };
 
   const login = async (code: string) => {
     try {
@@ -57,7 +72,7 @@ export const useAuth = () => {
       }
     }
     setIsLoading(false);
-  }, [setIsAuthenticated, setUser]);
+  }, [setIsAuthenticated]);
 
   const logout = () => {
     setIsLoading(true);
@@ -71,6 +86,7 @@ export const useAuth = () => {
   return {
     isAuthenticated,
     user,
+    setUser,
     login,
     logout,
     isLoading,
