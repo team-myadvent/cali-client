@@ -18,6 +18,7 @@ import { Text } from "@/components/common/Text";
 import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 import EditIcon from "@/components/common/icons/EditIcon";
 import DeleteIcon from "@/components/common/icons/DeleteIcon";
+import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
 
 // TODO : input 컴포넌트 만들어서 사용하기
 
@@ -217,54 +218,76 @@ const CalendarCardPage = () => {
     }
   };
 
+  interface GuestbookInput {
+    writer_name: string;
+    content: string;
+  }
+
   const GuestbookSection = () => {
-    const [guestbookInput, setGuestbookInput] = useState({
-      author: "",
+    const [guestbookInput, setGuestbookInput] = useState<GuestbookInput>({
+      writer_name: user?.username || "",
       content: "",
     });
+    const handleSubmitGuestbook = async () => {
+      if (!cardData || !guestbookInput.content) return;
+
+      try {
+        const requestData: GuestbookRequest = {
+          content: guestbookInput.content,
+          // 로그인하지 않은 경우에만 writer_name 전송
+          ...(user ? {} : { writer_name: guestbookInput.writer_name }),
+        };
+
+        await createGuestbook(
+          user?.userId || 0,
+          Number(cardId),
+          requestData,
+          user?.accessToken
+        );
+
+        // 입력 필드 초기화
+        setGuestbookInput({
+          writer_name: user?.username || "",
+          content: "",
+        });
+
+        // 성공 메시지 또는 새로고침 등 추가 처리
+        alert("방명록이 등록되었습니다.");
+      } catch (error) {
+        console.error("방명록 등록 실패:", error);
+        alert("방명록 등록에 실패했습니다.");
+      }
+    };
 
     return (
       <GuestbookWrapper>
-        <GuestbookTitle>방명록 5개</GuestbookTitle>
+        <GuestbookTitle>방명록 {cardData?.guestbooks.length}개</GuestbookTitle>
         <GuestbookList>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최��캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          <GuestbookItem>
-            <GuestbookAuthor>캘리짱</GuestbookAuthor>
-            <GuestbookContent>
-              백자에시최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최애캐롤임최
-            </GuestbookContent>
-          </GuestbookItem>
-          {/* 다른 방명록 아이템들... */}
+          {cardData?.guestbooks.map((guestbook, index) => (
+            <GuestbookItem key={index}>
+              <GuestbookAuthor>
+                {guestbook.writer_name || "익명"}
+              </GuestbookAuthor>
+              <GuestbookContent>{guestbook.content}</GuestbookContent>
+            </GuestbookItem>
+          ))}
         </GuestbookList>
         <GuestbookInputWrapper>
           <InputContainer>
-            <AuthorInput
-              placeholder="작성자명"
-              value={guestbookInput.author}
-              onChange={(e) =>
-                setGuestbookInput((prev) => ({
-                  ...prev,
-                  author: e.target.value,
-                }))
-              }
-            />
+            {user ? (
+              <AuthorInput value={user.username} disabled />
+            ) : (
+              <AuthorInput
+                placeholder="작성자명"
+                value={guestbookInput.writer_name}
+                onChange={(e) =>
+                  setGuestbookInput((prev) => ({
+                    ...prev,
+                    writer_name: e.target.value,
+                  }))
+                }
+              />
+            )}
             <ContentInput
               placeholder="내용을 남겨주세요. (최대 100자)"
               value={guestbookInput.content}
@@ -277,7 +300,7 @@ const CalendarCardPage = () => {
               maxLength={100}
             />
           </InputContainer>
-          <SubmitButton>등록하기</SubmitButton>
+          <SubmitButton onClick={handleSubmitGuestbook}>등록하기</SubmitButton>
         </GuestbookInputWrapper>
       </GuestbookWrapper>
     );
@@ -314,10 +337,12 @@ const CalendarCardPage = () => {
                         <EditIcon width={14} height={14} color="#6F6E6E" />
                         커버 수정
                       </CoverButton>
-                      <CoverButton onClick={handleCoverDelete}>
-                        <DeleteIcon color="#6F6E6E" />
-                        커버 삭제
-                      </CoverButton>
+                      {cardData.thumbnail_file && (
+                        <CoverButton onClick={handleCoverDelete}>
+                          <DeleteIcon color="#6F6E6E" />
+                          커버 삭제
+                        </CoverButton>
+                      )}
                     </CoverButtonGroup>
                   )}
                 </ButtonOverlay>

@@ -1,3 +1,5 @@
+import { Guestbook } from "./guestbook";
+
 export interface CalendarItem {
   id: string;
   calendar_dt: string;
@@ -17,6 +19,7 @@ export interface CalendarCardItem {
   youtube_video_id: string;
   calendar_thumbnail: string;
   thumbnail_file: string | null;
+  guestbooks: Guestbook[];
 }
 
 export interface UpdateCalendarCardItem {

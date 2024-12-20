@@ -1,7 +1,7 @@
 interface RequestOptions extends RequestInit {
   accessToken?: string;
 }
-
+//TODO : 헤더 설정 추가
 async function request<T>(
   url: string,
   { accessToken, ...options }: RequestOptions = {}

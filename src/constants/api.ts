@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
   PROFILE: {
     ME: "/profiles/me",
   },
+  GUESTBOOK: "/guestbooks",
 };
 
 export const API_METHODS = {
