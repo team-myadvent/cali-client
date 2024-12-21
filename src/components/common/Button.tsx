@@ -12,6 +12,7 @@ interface BaseButtonProps {
   variant: ButtonVariant;
   onClick?: () => void;
   disabled?: boolean;
+  isBlocked?: boolean;
 }
 
 interface StandardButtonProps extends BaseButtonProps {
@@ -51,7 +52,10 @@ const Button = (props: ButtonProps) => {
 };
 export default Button;
 
-const StyledButton = styled.button<{ variant: ButtonVariant }>`
+const StyledButton = styled.button<{
+  variant: ButtonVariant;
+  isBlocked?: boolean;
+}>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,6 +63,8 @@ const StyledButton = styled.button<{ variant: ButtonVariant }>`
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   gap: 10px;
+  width: ${({ isBlocked }) => (isBlocked ? "100%" : "fit-content")};
+  white-space: nowrap;
 
   ${({ variant }) => {
     switch (variant) {

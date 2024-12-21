@@ -20,7 +20,7 @@ import EditIcon from "@/components/common/icons/EditIcon";
 import DeleteIcon from "@/components/common/icons/DeleteIcon";
 import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
 
-// TODO : input 컴포넌트 만들어서 사용하기
+// TODO : input 컴포넌트 만들어 사용하기
 
 const CalendarCardPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -196,11 +196,6 @@ const CalendarCardPage = () => {
 
     try {
       const updateData: UpdateCalendarCardItem = {
-        title: editData.title || "",
-        comment: editData.comment || "",
-        comment_detail: editData.comment_detail || "",
-        youtube_video_id: editData.youtube_video_id || "",
-        youtube_thumbnail_link: `https://img.youtube.com/vi/${editData.youtube_video_id}/maxresdefault.jpg`,
         thumbnail_file: null,
       };
 
@@ -228,6 +223,7 @@ const CalendarCardPage = () => {
       writer_name: user?.username || "",
       content: "",
     });
+    const [isInputFocused, setIsInputFocused] = useState(false);
     const handleSubmitGuestbook = async () => {
       if (!cardData || !guestbookInput.content) return;
 
@@ -251,7 +247,8 @@ const CalendarCardPage = () => {
           content: "",
         });
 
-        // 성공 메시지 또는 새로고침 등 추가 처리
+        // TODO : 성공 메시지 또는 새로고침 등 추가 처리
+        router.reload();
         alert("방명록이 등록되었습니다.");
       } catch (error) {
         console.error("방명록 등록 실패:", error);
@@ -272,7 +269,7 @@ const CalendarCardPage = () => {
             </GuestbookItem>
           ))}
         </GuestbookList>
-        <GuestbookInputWrapper>
+        <GuestbookInputWrapper isFocused={isInputFocused}>
           <InputContainer>
             {user ? (
               <AuthorInput value={user.username} disabled />
@@ -291,16 +288,21 @@ const CalendarCardPage = () => {
             <ContentInput
               placeholder="내용을 남겨주세요. (최대 100자)"
               value={guestbookInput.content}
-              onChange={(e) =>
+              onChange={(e) => {
                 setGuestbookInput((prev) => ({
                   ...prev,
                   content: e.target.value,
-                }))
-              }
+                }));
+              }}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
               maxLength={100}
+              rows={1}
             />
           </InputContainer>
-          <SubmitButton onClick={handleSubmitGuestbook}>등록하기</SubmitButton>
+          <SubmitButton variant="register" onClick={handleSubmitGuestbook}>
+            등록하기
+          </SubmitButton>
         </GuestbookInputWrapper>
       </GuestbookWrapper>
     );
@@ -450,10 +452,12 @@ export default CalendarCardPage;
 const Container = styled.div`
   width: 100%;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 0;
   display: flex;
   flex-direction: column;
-  align-item: center;
+  align-items: center;
+  justify-content: center;
+
   gap: 20px;
 `;
 
@@ -516,8 +520,7 @@ const CommentInput = styled.textarea`
   border: none;
   resize: none;
   text-align: center;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 14px;
   color: ${colors.black};
   &::placeholder {
     color: ${colors.grey[1]};
@@ -595,6 +598,7 @@ const SearchResultTitle = styled.div`
 
 const GuestbookWrapper = styled.div`
   margin-top: 24px;
+  width: 100%;
 `;
 
 const GuestbookTitle = styled.h2`
@@ -604,10 +608,17 @@ const GuestbookTitle = styled.h2`
 `;
 
 const GuestbookList = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 12px;
   margin-bottom: 20px;
+
+  // 모바일 기본값: 1열
+  grid-template-columns: 1fr;
+
+  // 768px 이상일 때 3열로 변경
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
 `;
 
 const GuestbookItem = styled.div`
@@ -615,27 +626,34 @@ const GuestbookItem = styled.div`
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  break-inside: avoid;
 `;
 
 const GuestbookAuthor = styled.div`
   font-weight: 500;
   margin-bottom: 8px;
+  color: ${colors.grey[2]};
 `;
 
 const GuestbookContent = styled.div`
-  color: #333;
+  color: ${colors.black};
   font-size: 14px;
   line-height: 1.5;
+  word-break: break-all;
 `;
 
-const GuestbookInputWrapper = styled.div`
+const GuestbookInputWrapper = styled.div<{ isFocused: boolean }>`
   display: flex;
   gap: 12px;
-  align-items: flex-start;
-  background: white;
-  border-radius: 8px;
+  align-items: center;
+  width: 100%;
+  background: ${colors.white};
+  box-sizing: border-box;
+  border-radius: 12px;
   padding: 16px;
-  border: 1px solid #eee;
+  border: 1px solid
+    ${(props) => (props.isFocused ? colors.red[2] : colors.grey[1])};
+  transition: border-color 0.2s ease;
 `;
 
 const InputContainer = styled.div`
@@ -648,39 +666,37 @@ const InputContainer = styled.div`
 const AuthorInput = styled.input`
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: 15px;
   padding: 8px 0;
-  border-bottom: 1px solid #eee;
-
+  background: transparent;
   &::placeholder {
-    color: #999;
+    color: ${colors.red[3]};
+  }
+
+  &:disabled {
+    color: ${colors.red[3]};
+    cursor: default;
   }
 `;
 
-const ContentInput = styled.input`
+const ContentInput = styled.textarea`
   border: none;
   outline: none;
   font-size: 14px;
   padding: 8px 0;
+  resize: none;
+  height: auto;
+  overflow-y: hidden;
+  line-height: 1.5;
 
   &::placeholder {
-    color: #999;
+    color: ${colors.grey[1]};
   }
 `;
 
-const SubmitButton = styled.button`
-  background: #f4a7aa;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 14px;
-  white-space: nowrap;
-
-  &:hover {
-    background: #f39599;
-  }
+const SubmitButton = styled(Button)`
+  flex-shrink: 0;
+  height: fit-content;
 `;
 
 const PlayButton = styled.button`
