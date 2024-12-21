@@ -159,7 +159,9 @@ const Calendar = ({ isBlurred, userId }: CalendarProps) => {
   // };
 
   const handleCalendarClick = (day: number) => {
-    router.push(`/calendars/card/${userId}/${day}`);
+    userId
+      ? router.push(`/calendars/card/user/${userId}/${day}`)
+      : router.push(`/calendars/card/${day}`);
   };
 
   return (
