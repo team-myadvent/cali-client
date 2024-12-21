@@ -53,7 +53,8 @@ import InActive22Icon from "../common/icons/cardNumber/InActive22Icon";
 import InActive23Icon from "../common/icons/cardNumber/InActive23Icon";
 import InActive24Icon from "../common/icons/cardNumber/InActive24Icon";
 import InActive25Icon from "../common/icons/cardNumber/InActive25Icon";
-import { SVGProps } from "react";
+import { SVGProps, useEffect } from "react";
+import type { CalendarItem } from "@/types/calendar";
 
 type IconType = ({ ...props }: SVGProps<SVGSVGElement>) => JSX.Element;
 type IconMapType = { [key: number]: IconType };
@@ -118,49 +119,30 @@ const InactiveIcons: IconMapType = {
 
 interface CalendarProps {
   isBlurred: boolean;
+  userId?: number;
 }
 
-const Calendar = ({ isBlurred }: CalendarProps) => {
+const Calendar = ({ isBlurred, userId }: CalendarProps) => {
   const router = useRouter();
-  const { calendarData, error, imageErrors, handleImageError } = useCalendar();
 
-  const getThumbnailUrl = (dayData: any) => {
-    // 날짜 비교를 위해 시간을 제거하고 날짜만 비교
-    const cardDate = new Date(dayData.calendar_dt);
-    cardDate.setHours(0, 0, 0, 0);
+  // userId가 유효한 값인지 확인
+  const isValidUserId = !isNaN(Number(userId));
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // 날짜 비교를 위해 타임스탬프 사용
-    const cardTimestamp = cardDate.getTime();
-    const todayTimestamp = today.getTime();
-
-    // 오늘 이하(이전 날짜 + 오늘)인 경우 YouTube 썸네일
-    if (cardTimestamp <= todayTimestamp && dayData.youtube_video_id) {
-      return `https://img.youtube.com/vi/${dayData.youtube_video_id}/maxresdefault.jpg`;
-    }
-
-    // 오늘 초과인 경우 캘린더 썸네일
-    if (cardTimestamp > todayTimestamp && dayData.calendar_thumbnail) {
-      return dayData.calendar_thumbnail;
-    }
-
-    // youtube_video_id나 calendar_thumbnail이 없는 경우
-    return "/default_thumbnail.png";
-  };
+  const { calendarData, imageErrors, handleImageError } = useCalendar(
+    isValidUserId ? Number(userId) : 0
+  );
 
   const handleCalendarClick = (day: number) => {
-    router.push(`/calendars/card/${day}`);
+    if (isValidUserId) {
+      router.push(`/calendars/card/user/${userId}/${day}`);
+    } else {
+      router.push(`/calendars/card/${day}`);
+    }
   };
-
-  if (error) {
-    return <div>에러 발생: {error.message}</div>;
-  }
 
   return (
     <CalendarList>
-      {calendarData.map((dayData) => {
+      {calendarData.map((dayData: CalendarItem) => {
         const day = formatCalendarDate(dayData.calendar_dt).day;
         const shouldBlur = isBlurred || isDateBlurred(dayData.calendar_dt);
 

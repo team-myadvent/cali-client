@@ -32,6 +32,7 @@ export const createGuestbook = async (
     headers: {
       ...defaultHeaders,
     },
+    accessToken,
     body: JSON.stringify(data),
   });
 };

@@ -1,5 +1,5 @@
 import { API_BASE_URL, API_ENDPOINTS, API_METHODS } from "@/constants/api";
-import { request } from ".";
+import { request, requestFormData } from ".";
 import {
   CalendarCardItem,
   CalendarItem,
@@ -75,23 +75,17 @@ export const updateCalendarCard = async (
 
     formData.append("data", JSON.stringify(jsonData));
 
-    return request<CalendarCardResponse>(url, {
+    // FormData를 사용할 때는 Content-Type 헤더를 제거 (브라우저가 자동으로 설정)
+    return requestFormData<CalendarCardResponse>(url, {
       method: API_METHODS.PUT,
       accessToken,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: formData,
     });
   } else {
-    // 파일이 없는 경우는 일반 JSON으로 전송
+    // 파일이 없는 경우는 기본 헤더 사용 (request 함수에서 자동으로 설정)
     return request<CalendarCardResponse>(url, {
       method: API_METHODS.PUT,
       accessToken,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(data),
     });
   }

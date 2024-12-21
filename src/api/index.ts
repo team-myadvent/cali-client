@@ -12,6 +12,8 @@ async function request<T>(
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  headers.set("Content-Type", "application/json");
+
   const response = await fetch(url, { ...options, headers });
 
   if (!response.ok) {
@@ -22,4 +24,24 @@ async function request<T>(
   return data;
 }
 
-export { request };
+async function requestFormData<T>(
+  url: string,
+  { accessToken, ...options }: RequestOptions = {}
+): Promise<T> {
+  const headers = new Headers(options.headers || {});
+
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  const response = await fetch(url, { ...options, headers });
+
+  if (!response.ok) {
+    throw new Error(`HTTP Error: ${response.status}`);
+  }
+
+  const data = (await response.json()) as T;
+  return data;
+}
+
+export { request, requestFormData };
