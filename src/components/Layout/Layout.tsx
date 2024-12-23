@@ -118,8 +118,7 @@ const HeaderActions = styled.div`
 
 const Layout = ({ children }: LayoutProps) => {
   const { isAuthenticated, logout } = useAuth();
-  const { isLoginPage, isOtherUserPage } = usePage();
-  const isMobile = useIsMobile();
+  const { isLoginPage } = usePage();
   const router = useRouter();
 
   const handleLoginClick = () => {
