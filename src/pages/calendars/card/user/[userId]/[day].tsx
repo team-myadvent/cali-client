@@ -20,8 +20,7 @@ import EditIcon from "@/components/common/icons/EditIcon";
 import DeleteIcon from "@/components/common/icons/DeleteIcon";
 import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
 import { media } from "@/styles/breakpoints";
-
-// TODO : input 컴포넌트 만들어 사용하기
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const CalendarCardPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +216,7 @@ const CalendarCardPage = () => {
   }
 
   const GuestbookSection = () => {
+    const isMobile = useIsMobile();
     const [guestbookInput, setGuestbookInput] = useState<GuestbookInput>({
       writer_name: user?.username || "",
       content: "",
@@ -269,11 +269,8 @@ const CalendarCardPage = () => {
         </GuestbookList>
         <GuestbookInputWrapper isFocused={isInputFocused}>
           <InputContainer>
-            {user ? (
-              <AuthorInput value={user.username} disabled />
-            ) : (
+            {!user && (
               <AuthorInput
-                placeholder="작성자명"
                 value={guestbookInput.writer_name}
                 onChange={(e) =>
                   setGuestbookInput((prev) => ({
@@ -281,27 +278,43 @@ const CalendarCardPage = () => {
                     writer_name: e.target.value,
                   }))
                 }
+                placeholder="닉네임"
+                disabled={!!user}
               />
             )}
             <ContentInput
-              placeholder="내용을 남겨주세요. (최대 100자)"
               value={guestbookInput.content}
-              onChange={(e) => {
+              onChange={(e) =>
                 setGuestbookInput((prev) => ({
                   ...prev,
                   content: e.target.value,
-                }));
-              }}
+                }))
+              }
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
+              placeholder="내용을 남겨주세요. (최대 100자)"
               maxLength={100}
-              rows={1}
             />
           </InputContainer>
-          <SubmitButton variant="register" onClick={handleSubmitGuestbook}>
+          {!isMobile && (
+            <SubmitButton
+              variant="register"
+              onClick={handleSubmitGuestbook}
+              disabled={!guestbookInput.content.trim()}
+            >
+              등록하기
+            </SubmitButton>
+          )}
+        </GuestbookInputWrapper>
+        {isMobile && (
+          <SubmitButton
+            variant="register"
+            onClick={handleSubmitGuestbook}
+            disabled={!guestbookInput.content.trim()}
+          >
             등록하기
           </SubmitButton>
-        </GuestbookInputWrapper>
+        )}
       </GuestbookWrapper>
     );
   };
@@ -689,7 +702,7 @@ const GuestbookContent = styled.div`
 const GuestbookInputWrapper = styled.div<{ isFocused: boolean }>`
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   background: ${colors.white};
   box-sizing: border-box;
@@ -698,6 +711,11 @@ const GuestbookInputWrapper = styled.div<{ isFocused: boolean }>`
   border: 1px solid
     ${(props) => (props.isFocused ? colors.red[2] : colors.grey[1])};
   transition: border-color 0.2s ease;
+
+  ${media.mobile} {
+    flex-direction: column;
+    padding: 12px;
+  }
 `;
 
 const InputContainer = styled.div`
@@ -705,6 +723,7 @@ const InputContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 `;
 
 const AuthorInput = styled.input`
@@ -741,6 +760,11 @@ const ContentInput = styled.textarea`
 const SubmitButton = styled(Button)`
   flex-shrink: 0;
   height: fit-content;
+
+  ${media.mobile} {
+    width: 100%;
+    margin-top: 8px;
+  }
 `;
 
 const PlayButton = styled.button`
