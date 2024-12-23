@@ -13,14 +13,12 @@ import { YoutubeVideo } from "@/types/serach";
 import { colors } from "@/styles/colors";
 import { useShare } from "@/hooks/useShare";
 import React from "react";
-import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
 import { Text } from "@/components/common/Text";
 import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
-import EditIcon from "@/components/common/icons/EditIcon";
-import DeleteIcon from "@/components/common/icons/DeleteIcon";
 import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
 import { media } from "@/styles/breakpoints";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { ActiveIcons } from "@/constants/iconMaps";
 
 const CalendarCardPage = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,6 +317,9 @@ const CalendarCardPage = () => {
     );
   };
 
+  // 현재 페이지가 자신의 캘린더인지 확인
+  const isOwnCalendar = user?.userId === userId;
+
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>에러 발생: {error.message}</div>;
   if (!cardData) return <div>데이터를 찾을 수 없습니다.</div>;
@@ -335,29 +336,6 @@ const CalendarCardPage = () => {
                   <PlayButton onClick={() => setIsVideoPlaying(true)}>
                     ▶
                   </PlayButton>
-                  {user && (
-                    <CoverButtonGroup>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleCoverEdit}
-                        accept="image/*"
-                        style={{ display: "none" }}
-                      />
-                      <CoverButton
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <EditIcon width={14} height={14} color="#6F6E6E" />
-                        커버 수정
-                      </CoverButton>
-                      {cardData.thumbnail_file && (
-                        <CoverButton onClick={handleCoverDelete}>
-                          <DeleteIcon color="#6F6E6E" />
-                          커버 삭제
-                        </CoverButton>
-                      )}
-                    </CoverButtonGroup>
-                  )}
                 </ButtonOverlay>
               </>
             ) : (
@@ -365,7 +343,7 @@ const CalendarCardPage = () => {
                 <iframe
                   width="100%"
                   height="100%"
-                  src={`https://www.youtube.com/embed/${cardData.youtube_video_id}?enablejsapi=1&autoplay=1&mute=1&rel=0`}
+                  src={`https://www.youtube.com/embed/${cardData.youtube_video_id}?enablejsapi=1&autoplay=1&rel=0`}
                   title="YouTube video player"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -376,84 +354,79 @@ const CalendarCardPage = () => {
           </ThumbnailContainer>
 
           <ContentInfo>
-            <Active1Icon variant="detail" />
+            {React.createElement(ActiveIcons[Number(cardId)], {
+              variant: "detail",
+            })}
             <Text variant="heading">{cardData.title}</Text>
           </ContentInfo>
 
-          {user && (
-            <HeaderSection>
-              <SearchContainer isFocused={isFocused} isSearching={isSearching}>
-                <SearchInputWrapper>
-                  <IconWrapper>
-                    {isFocused ? (
-                      <SongChangeIcon color={colors.red[2]} />
-                    ) : (
-                      <SongChangeIcon color={colors.black} />
-                    )}
-                  </IconWrapper>
-                  <SearchInput
-                    value={searchKeyword}
-                    onChange={(e) => setSearchKeyword(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    placeholder="노래 검색..."
-                    disabled={isSearching}
-                  />
-                </SearchInputWrapper>
-                {isSearching ? (
-                  <SearchResults>
-                    <SearchResultItem>
-                      <SearchResultTitle>검색 중...</SearchResultTitle>
+          {/* 자신의 캘린더일 때만 노래 검색 표시 */}
+          {isOwnCalendar && (
+            <SearchContainer isFocused={isFocused} isSearching={isSearching}>
+              <SearchInputWrapper>
+                <IconWrapper isFocused={isFocused} isSearching={isSearching}>
+                  <SongChangeIcon />
+                </IconWrapper>
+                <SearchInput
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  placeholder="노래 검색..."
+                  disabled={isSearching}
+                />
+              </SearchInputWrapper>
+              {searchResults.length > 0 && (
+                <SearchResults>
+                  {searchResults.map((result) => (
+                    <SearchResultItem key={result.youtube_video_id}>
+                      <SearchResultInfo>
+                        <SearchResultTitle>{result.title}</SearchResultTitle>
+                      </SearchResultInfo>
+                      <SelectButton
+                        onClick={() =>
+                          handleSelectVideo(
+                            result.youtube_video_id,
+                            result.title
+                          )
+                        }
+                      >
+                        선택
+                      </SelectButton>
                     </SearchResultItem>
-                  </SearchResults>
-                ) : (
-                  searchResults.length > 0 && (
-                    <SearchResults>
-                      {searchResults.map((result) => {
-                        return (
-                          <SearchResultItem key={result.youtube_video_id}>
-                            <SearchResultInfo>
-                              <SearchResultTitle>
-                                {result.title}
-                              </SearchResultTitle>
-                            </SearchResultInfo>
-                            <SelectButton
-                              onClick={() =>
-                                handleSelectVideo(
-                                  result.youtube_video_id,
-                                  result.title
-                                )
-                              }
-                            >
-                              선택
-                            </SelectButton>
-                          </SearchResultItem>
-                        );
-                      })}
-                    </SearchResults>
-                  )
-                )}
-              </SearchContainer>
-            </HeaderSection>
+                  ))}
+                </SearchResults>
+              )}
+            </SearchContainer>
           )}
 
           <CommentWrapper>
             <CommentContainer>
-              <CommentInput
-                ref={commentRef}
-                placeholder="오늘의 코멘트"
-                value={editData?.comment || ""}
-                onChange={(e) => handleCommentChange(e, "comment")}
-                onKeyDown={(e) => handleCommentKeyDown(e, "comment")}
-              />
-              <CommentDetailInput
-                ref={commentDetailRef}
-                placeholder="내용을 자유롭게 남겨주세요"
-                value={editData?.comment_detail}
-                onChange={(e) => handleCommentChange(e, "comment_detail")}
-                onKeyPress={(e) => handleCommentKeyDown(e, "comment_detail")}
-              />
+              {/* 자신의 캘린더일 때는 수정 가능한 textarea, 아닐 때는 읽기 전용 div */}
+              {isOwnCalendar ? (
+                <>
+                  <CommentInput
+                    value={editData?.comment || ""}
+                    onChange={(e) => handleCommentChange(e, "comment")}
+                    onKeyDown={(e) => handleCommentKeyDown(e, "comment")}
+                    placeholder="오늘의 코멘트"
+                  />
+                  <CommentDetailInput
+                    value={editData?.comment_detail || ""}
+                    onChange={(e) => handleCommentChange(e, "comment_detail")}
+                    onKeyDown={(e) => handleCommentKeyDown(e, "comment_detail")}
+                    placeholder="내용을 자유롭게 남겨주세요"
+                  />
+                </>
+              ) : (
+                <>
+                  <CommentReadOnly>{cardData?.comment}</CommentReadOnly>
+                  <CommentDetailReadOnly>
+                    {cardData?.comment_detail}
+                  </CommentDetailReadOnly>
+                </>
+              )}
             </CommentContainer>
           </CommentWrapper>
         </CardWrapper>
@@ -548,7 +521,10 @@ const SearchInputWrapper = styled.div`
   }
 `;
 
-const IconWrapper = styled.div`
+const IconWrapper = styled.div<{
+  isFocused: boolean;
+  isSearching: boolean;
+}>`
   position: absolute;
   left: 12px;
   display: flex;
@@ -580,7 +556,6 @@ const SearchInput = styled.input`
   }
 
   &:disabled {
-    background-color: ${colors.grey[1]};
     cursor: not-allowed;
   }
 `;
@@ -855,4 +830,22 @@ const CommentDetailInput = styled(CommentInput)`
   &:focus {
     outline: none;
   }
+`;
+
+// 읽기 전용 코멘트를 위한 스타일 컴포넌트 추가
+const CommentReadOnly = styled.div`
+  width: 100%;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: ${colors.black};
+  white-space: pre-wrap;
+  word-break: break-word;
+`;
+
+const CommentDetailReadOnly = styled(CommentReadOnly)`
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 12px;
+  padding-top: 12px;
 `;

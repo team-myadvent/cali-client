@@ -7,8 +7,8 @@ import { CalendarCardItem, UpdateCalendarCardItem } from "@/types/calendar";
 import Button from "@/components/common/Button";
 import { colors } from "@/styles/colors";
 import React from "react";
-import Active1Icon from "@/components/common/icons/cardNumber/Active1Icon";
 import { Text } from "@/components/common/Text";
+import { ActiveIcons } from "@/constants/iconMaps";
 
 const DefaultCalendarCardPage = () => {
   const router = useRouter();
@@ -50,7 +50,7 @@ const DefaultCalendarCardPage = () => {
                 <iframe
                   width="100%"
                   height="100%"
-                  src={`https://www.youtube.com/embed/${cardData.youtube_video_id}?enablejsapi=1&autoplay=1&mute=1&rel=0`}
+                  src={`https://www.youtube.com/embed/${cardData.youtube_video_id}?enablejsapi=1&autoplay=1&rel=0`}
                   title="YouTube video player"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -61,7 +61,9 @@ const DefaultCalendarCardPage = () => {
           </ThumbnailContainer>
 
           <ContentInfo>
-            <Active1Icon variant="detail" />
+            {React.createElement(ActiveIcons[Number(cardId)], {
+              variant: "detail",
+            })}
             <Text variant="heading">{cardData.title}</Text>
           </ContentInfo>
 
