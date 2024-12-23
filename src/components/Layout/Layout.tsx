@@ -6,6 +6,7 @@ import LogoIcon from "../common/icons/LogoIcon";
 import LogoutIcon from "../common/icons/LogoutIcon";
 import LoginIcon from "../common/icons/LoginIcon";
 import { colors } from "@/styles/colors";
+import { usePage } from "@/hooks/usePage";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -76,9 +77,9 @@ const HeaderActions = styled.div`
 `;
 
 const Layout = ({ children }: LayoutProps) => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const { isLoginPage } = usePage();
   const router = useRouter();
-  const isLoginPage = router.pathname === "/login";
 
   const handleLoginClick = () => {
     router.push("/login");
@@ -108,7 +109,14 @@ const Layout = ({ children }: LayoutProps) => {
                 >
                   로그아웃
                 </Button>
-                <Button variant="export">공유하기</Button>
+                <Button
+                  variant="export"
+                  onClick={() => {
+                    console.log("공유하기");
+                  }}
+                >
+                  공유하기
+                </Button>
               </HeaderActions>
             ) : (
               <Button

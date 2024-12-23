@@ -9,13 +9,14 @@ import { Text } from "@/components/common/Text";
 import { useRouter } from "next/router";
 import Layout from "@/components/Layout/Layout";
 import Calendar from "@/components/calendars";
+import { usePage } from "@/hooks/usePage";
 
 const UserCalendar = () => {
   const router = useRouter();
   const { userId } = router.query;
   const { user } = useAuth();
   const [activeYear, setActiveYear] = useState<"2024" | "2025">("2024");
-
+  const { isOtherUserPage } = usePage();
   const getChipVariant = (year: "2024" | "2025") => {
     if (activeYear === "2025") {
       return year === "2024" ? "activeNotClicked" : "inactiveClicked";
@@ -39,7 +40,7 @@ const UserCalendar = () => {
   return (
     <Layout>
       <Main>
-        <ProfileSection />
+        {!isOtherUserPage && <ProfileSection />}
         <ChipContainer>
           <Chip
             variant={getChipVariant("2024")}

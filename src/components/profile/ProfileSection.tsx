@@ -14,7 +14,7 @@ const ProfileSection = () => {
     if (user) {
       setUser({
         ...user,
-        username: newName
+        username: newName,
       });
     }
   };
@@ -23,7 +23,7 @@ const ProfileSection = () => {
     <Container>
       <ProfileAvatar initial={user?.username ? user?.username.charAt(0) : ""} />
       <NameContainer>
-        <Username>{user?.username} 플리</Username>
+        <Username>{user?.username}의 플레이리스트</Username>
         <EditButton onClick={() => setIsModalOpen(true)}>
           <EditIcon />
         </EditButton>
