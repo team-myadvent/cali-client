@@ -1,14 +1,15 @@
 import styled from "@emotion/styled";
-import { useShare } from "@/hooks/useShare";
-import ShareModal from "@/components/common/ShareModal";
 import { Chip } from "@/components/common/Chip";
 import { useState } from "react";
 import { Text } from "@/components/common/Text";
 import Layout from "@/components/Layout/Layout";
 import Calendar from "@/components/calendars";
+import KaKaoLoginButton from "@/components/kakao/KaKaoLoginButton";
+import { useAuth } from "@/hooks/useAuth";
 
 const DefaultCalendar = () => {
   const [activeYear, setActiveYear] = useState<"2024" | "2025">("2024");
+  const { user } = useAuth();
 
   const getChipVariant = (year: "2024" | "2025") => {
     if (activeYear === "2025") {
@@ -18,18 +19,23 @@ const DefaultCalendar = () => {
     }
   };
 
-  //   const {
-  //     isShareModalOpen,
-  //     setIsShareModalOpen,
-  //     shareUrl,
-  //     handleCopyLink,
-  //     handleSaveImage,
-  //     handleShareSNS,
-  //   } = useShare({});
-
   return (
     <Layout>
       <Main>
+        {!user && (
+          <>
+            <TextWrapper>
+              <Text variant={"title"} color="black">
+                나의 캘리를 만들고
+              </Text>
+              <Text variant={"title"} color="black">
+                친구들과 공유해보세요.
+              </Text>
+            </TextWrapper>
+            <KaKaoLoginButton />
+          </>
+        )}
+
         <ChipContainer>
           <Chip
             variant={getChipVariant("2024")}
@@ -53,14 +59,6 @@ const DefaultCalendar = () => {
             </Text>
           </MessageContainer>
         )}
-        {/* <ShareModal
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          shareUrl={shareUrl}
-          onCopyLink={handleCopyLink}
-          onSaveImage={handleSaveImage}
-          onShareSNS={handleShareSNS}
-        /> */}
       </Main>
     </Layout>
   );
@@ -79,6 +77,7 @@ const Main = styled.main`
 
 const ChipContainer = styled.div`
   display: flex;
+  margin-top: 12px;
   gap: 8px;
 `;
 
@@ -88,4 +87,12 @@ const MessageContainer = styled.div`
   align-items: center;
   height: calc(100vh - 300px);
   width: 100%;
+`;
+
+const TextWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 `;

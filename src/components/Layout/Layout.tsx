@@ -6,6 +6,9 @@ import LogoIcon from "../common/icons/LogoIcon";
 import LogoutIcon from "../common/icons/LogoutIcon";
 import LoginIcon from "../common/icons/LoginIcon";
 import { colors } from "@/styles/colors";
+import { usePage } from "@/hooks/usePage";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { media } from "@/styles/breakpoints";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,8 +17,11 @@ interface LayoutProps {
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  // TODO : mobile 일 경우 8px 20px 적용해야함 isMobile?
   padding: 48px 60px 8px 60px;
+
+  ${media.mobile} {
+    padding: 40px 20px 8px 20px;
+  }
 `;
 
 const Main = styled.main`
@@ -23,6 +29,10 @@ const Main = styled.main`
   display: flex;
   flex-direction: column;
   height: calc(100vh - 48px);
+
+  ${media.mobile} {
+    height: calc(100vh - 40px);
+  }
 `;
 
 const Header = styled.header`
@@ -36,8 +46,12 @@ const Header = styled.header`
   background-color: ${colors.beige};
   align-items: center;
   z-index: 1000;
-  // TODO : mobile 일 경우 8px 20px 적용해야함 isMobile?
   padding: 8px 60px;
+
+  ${media.mobile} {
+    padding: 8px 20px;
+    height: 40px;
+  }
 `;
 
 const ProfileSection = styled.div`
@@ -53,16 +67,32 @@ const FooterContent = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   text-align: center;
+
+  ${media.mobile} {
+    font-size: 12px;
+  }
 `;
 
 const FooterLinks = styled.div`
   margin-top: 1rem;
+
+  ${media.mobile} {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 `;
 
 const FooterLink = styled.a`
   margin: 0 1rem;
   color: #666;
   text-decoration: none;
+
+  ${media.mobile} {
+    margin: 0;
+    font-size: 12px;
+  }
 
   &:hover {
     color: #0070f3;
@@ -73,12 +103,23 @@ const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+
+  ${media.mobile} {
+    gap: 12px;
+  }
+
+  button {
+    ${media.mobile} {
+      font-size: 14px;
+      padding: 8px 16px;
+    }
+  }
 `;
 
 const Layout = ({ children }: LayoutProps) => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
+  const { isLoginPage } = usePage();
   const router = useRouter();
-  const isLoginPage = router.pathname === "/login";
 
   const handleLoginClick = () => {
     router.push("/login");
@@ -108,7 +149,14 @@ const Layout = ({ children }: LayoutProps) => {
                 >
                   로그아웃
                 </Button>
-                <Button variant="export">공유하기</Button>
+                <Button
+                  variant="export"
+                  onClick={() => {
+                    console.log("공유하기");
+                  }}
+                >
+                  공유하기
+                </Button>
               </HeaderActions>
             ) : (
               <Button
