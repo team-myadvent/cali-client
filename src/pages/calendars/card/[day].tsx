@@ -138,7 +138,9 @@ const CommentWrapper = ({ cardData }: { cardData: CalendarCardItem }) => {
 
 const CommentContainer = styled.div`
   border: 1px solid ${colors.grey[1]};
-  margin: 24px;
+  margin: 0 24px 24px 24px;
+  box-sizing: border-box;
+  padding: 12px 16px;
   border-radius: 20px;
   display: flex;
   flex-direction: column;
