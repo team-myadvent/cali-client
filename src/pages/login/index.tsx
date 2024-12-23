@@ -1,48 +1,33 @@
 import Layout from "@/components/Layout/Layout";
 import styled from "@emotion/styled";
 import { Text } from "@/components/common/Text";
-import KaKaoIcon from "@/components/common/icons/KaKaoIcon";
-
-const redirectUri = process.env.NEXT_PUBLIC_KAKAO_REDIRECT_URI!;
-const scope = ["account_email", "gender", "age_range", "birthday"].join(",");
+import KaKaoLoginButton from "@/components/kakao/KaKaoLoginButton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 const Login = () => {
-  const handleKakaoLogin = () => {
-    if (!window.Kakao) {
-      console.error("Kakao SDK가 로드되지 않았습니다.");
-      return;
-    }
-
-    if (!window.Kakao.isInitialized()) {
-      window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
-    }
-
-    try {
-      window.Kakao.Auth.authorize({
-        redirectUri,
-        scope,
-      });
-    } catch (error) {
-      console.error("카카오 로그인 에러:", error);
-    }
-  };
+  const isMobile = useIsMobile();
 
   return (
     <Layout>
       <LoginContainer>
-        <ContentWrapper>
-          <Text variant="heading" color="black">
-            로그인하여 나의 캘리를 만들고
-          </Text>
-          <Text variant="heading" color="black">
-            친구들과 공유해보세요.
-          </Text>
-          <KakaoLoginButton onClick={handleKakaoLogin}>
-            <KaKaoIcon />
-            <Text variant="subtitle" style={{ color: "#191919" }}>
-              카카오 로그인
+        <ContentWrapper isMobile={isMobile}>
+          <TextWrapper isMobile={isMobile}>
+            <Text
+              variant={isMobile ? "title" : "heading"}
+              color="black"
+              style={{ fontWeight: 700 }}
+            >
+              로그인하여 나의 캘리를 만들고
             </Text>
-          </KakaoLoginButton>
+            <Text
+              variant={isMobile ? "title" : "heading"}
+              color="black"
+              style={{ fontWeight: 700 }}
+            >
+              친구들과 공유해보세요.
+            </Text>
+          </TextWrapper>
+          <KaKaoLoginButton />
         </ContentWrapper>
       </LoginContainer>
     </Layout>
@@ -59,33 +44,21 @@ const LoginContainer = styled.div`
   height: 100vh;
 `;
 
-const ContentWrapper = styled.div`
+const ContentWrapper = styled.div<{ isMobile: boolean }>`
   background: white;
   border-radius: 20px;
-  padding: 80px 24px;
+  padding: ${({ isMobile }) => (isMobile ? "40px 20px" : "80px 24px")};
   width: 100%;
   max-width: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 8px;
 `;
 
-const KakaoLoginButton = styled.div`
-  cursor: pointer;
-  margin-top: 40px;
+const TextWrapper = styled.div<{ isMobile: boolean }>`
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  padding: 14px 0;
-  width: 100%;
-  background-color: #fee500;
-  border-radius: 8px;
-  max-width: 300px;
-  &:hover {
-    background-color: #fee500;
-    opacity: 0.8;
-  }
+  margin-bottom: ${({ isMobile }) => (isMobile ? "20px" : "40px")};
 `;
