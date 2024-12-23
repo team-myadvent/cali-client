@@ -19,6 +19,7 @@ import SongChangeIcon from "@/components/common/icons/SongChangeIcon";
 import EditIcon from "@/components/common/icons/EditIcon";
 import DeleteIcon from "@/components/common/icons/DeleteIcon";
 import { createGuestbook, GuestbookRequest } from "@/api/guestbook";
+import { media } from "@/styles/breakpoints";
 
 // TODO : input 컴포넌트 만들어 사용하기
 
@@ -27,6 +28,8 @@ const CalendarCardPage = () => {
   const commentRef = useRef<HTMLTextAreaElement>(null);
   const commentDetailRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
+  const [isFocused, setIsFocused] = useState(false);
+
   const { day: cardId, userId } = router.query;
   const { user } = useAuth();
   const { cardData, isLoading, error } = useCalendarCard(
@@ -116,7 +119,6 @@ const CalendarCardPage = () => {
       setSearchResults([]);
       setSearchKeyword("");
 
-      // 업데이트 후 페이지 새로고침
       router.reload();
     } catch (error) {
       console.error("업데이트 실패:", error);
@@ -164,8 +166,6 @@ const CalendarCardPage = () => {
     if (!file || !user?.userId || !cardData || !editData) return;
 
     try {
-      console.log("Current editData:", editData);
-
       const updateData: UpdateCalendarCardItem = {
         title: editData.title || "",
         comment: editData.comment || "",
@@ -174,8 +174,6 @@ const CalendarCardPage = () => {
         youtube_thumbnail_link: editData.youtube_thumbnail_link || "",
         thumbnail_file: file,
       };
-
-      console.log("Sending updateData:", updateData);
 
       await updateCalendarCard(
         user.accessToken || "",
@@ -371,54 +369,60 @@ const CalendarCardPage = () => {
 
           {user && (
             <HeaderSection>
-              <SearchContainer>
+              <SearchContainer isFocused={isFocused} isSearching={isSearching}>
                 <SearchInputWrapper>
                   <IconWrapper>
-                    <SongChangeIcon />
+                    {isFocused ? (
+                      <SongChangeIcon color={colors.red[2]} />
+                    ) : (
+                      <SongChangeIcon color={colors.black} />
+                    )}
                   </IconWrapper>
                   <SearchInput
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     placeholder="노래 검색..."
                     disabled={isSearching}
                   />
                 </SearchInputWrapper>
+                {isSearching ? (
+                  <SearchResults>
+                    <SearchResultItem>
+                      <SearchResultTitle>검색 중...</SearchResultTitle>
+                    </SearchResultItem>
+                  </SearchResults>
+                ) : (
+                  searchResults.length > 0 && (
+                    <SearchResults>
+                      {searchResults.map((result) => {
+                        return (
+                          <SearchResultItem key={result.youtube_video_id}>
+                            <SearchResultInfo>
+                              <SearchResultTitle>
+                                {result.title}
+                              </SearchResultTitle>
+                            </SearchResultInfo>
+                            <SelectButton
+                              onClick={() =>
+                                handleSelectVideo(
+                                  result.youtube_video_id,
+                                  result.title
+                                )
+                              }
+                            >
+                              선택
+                            </SelectButton>
+                          </SearchResultItem>
+                        );
+                      })}
+                    </SearchResults>
+                  )
+                )}
               </SearchContainer>
             </HeaderSection>
-          )}
-
-          {isSearching ? (
-            <SearchResults>
-              <SearchResultItem>
-                <SearchResultTitle>검색 중...</SearchResultTitle>
-              </SearchResultItem>
-            </SearchResults>
-          ) : (
-            searchResults.length > 0 && (
-              <SearchResults>
-                {searchResults.map((result) => {
-                  return (
-                    <SearchResultItem key={result.youtube_video_id}>
-                      <div>
-                        <SearchResultTitle>{result.title}</SearchResultTitle>
-                      </div>
-                      <Button
-                        onClick={() =>
-                          handleSelectVideo(
-                            result.youtube_video_id,
-                            result.title
-                          )
-                        }
-                        variant="select"
-                      >
-                        선택
-                      </Button>
-                    </SearchResultItem>
-                  );
-                })}
-              </SearchResults>
-            )
           )}
 
           <CommentWrapper>
@@ -501,54 +505,34 @@ const ContentInfo = styled.div`
   gap: 8px;
 `;
 
-const CommentWrapper = styled.div`
-  padding: 20px;
-  border-top: 1px solid #eee;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const CommentContainer = styled.div`
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const CommentInput = styled.textarea`
-  width: 100%;
-  border: none;
-  resize: none;
-  text-align: center;
-  font-size: 14px;
-  color: ${colors.black};
-  &::placeholder {
-    color: ${colors.grey[1]};
-  }
-`;
-
-const CommentDetailInput = styled(CommentInput)`
-  color: ${colors.black};
-  font-size: 16px;
-  font-weight: 500;
-  &::placeholder {
-    color: ${colors.grey[1]};
-  }
-`;
+const CommentWrapper = styled.div``;
 
 const HeaderSection = styled.div``;
 
-const SearchContainer = styled.div`
+const SearchContainer = styled.div<{
+  isFocused: boolean;
+  isSearching: boolean;
+}>`
   display: flex;
-  gap: 1rem;
-  width: 100%;
+  border: 1px solid
+    ${(props) =>
+      props.isFocused || props.isSearching ? colors.red[2] : colors.grey[1]};
+  flex-direction: column;
+  border-radius: 20px;
+  margin: 24px;
+  transition: border-color 0.2s ease;
 `;
 
 const SearchInputWrapper = styled.div`
   position: relative;
-  flex: 1;
   display: flex;
   align-items: center;
+  width: 100%;
+  margin-left: 16px;
+  box-sizing: border-box;
+  ${media.mobile} {
+    width: 80%;
+  }
 `;
 
 const IconWrapper = styled.div`
@@ -556,18 +540,35 @@ const IconWrapper = styled.div`
   left: 12px;
   display: flex;
   align-items: center;
+  z-index: 1;
 `;
 
 const SearchInput = styled.input`
-  width: 100%;
-  padding: 0.75rem;
+  width: 80%;
+  padding: 12px 0;
   padding-left: 40px;
-  border: 1px solid ${colors.grey[2]};
-  border-radius: 8px;
-  font-size: 1rem;
+
+  font-size: 16px;
+  border: none;
+
+  ${media.mobile} {
+    font-size: 14px;
+    padding: 10px;
+    padding-left: 40px;
+  }
 
   &::placeholder {
     color: ${colors.grey[2]};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${colors.black};
+  }
+
+  &:disabled {
+    background-color: ${colors.grey[1]};
+    cursor: not-allowed;
   }
 `;
 
@@ -575,25 +576,68 @@ const SearchResults = styled.div`
   margin-bottom: 1rem;
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  padding: 10px 20px;
+
+  ${media.mobile} {
+    padding: 0 16px;
+  }
 `;
 
 const SearchResultItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid ${colors.grey[1]};
+  padding: 10px 0;
+  gap: 12px;
 
-  &:last-child {
-    border-bottom: none;
+  ${media.mobile} {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 `;
 
+const SearchResultInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0; // flex-basis 버그 방지
+`;
+
 const SearchResultTitle = styled.div`
-  font-size: 1rem;
-  margin-right: 1rem;
+  font-size: 16px;
+  font-weight: 500;
+  color: ${colors.black};
+  word-break: break-word;
+  overflow-wrap: break-word;
+
+  ${media.mobile} {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+`;
+
+const SelectButton = styled.button`
+  padding: 8px 16px;
+  border-radius: 4px;
+  background-color: ${colors.black};
+  color: white;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  ${media.mobile} {
+    width: 100%;
+    padding: 10px;
+  }
+
+  &:hover {
+    background-color: ${colors.grey[1]};
+  }
 `;
 
 const GuestbookWrapper = styled.div`
@@ -744,4 +788,47 @@ const CoverButton = styled.button`
   align-items: center; // 수직 중앙 정렬
   justify-content: center; // 수평 중앙 정렬
   gap: 4px; // 아이콘과 텍스트 사이 간격
+`;
+
+const CommentContainer = styled.div`
+  border: 1px solid ${colors.grey[1]};
+  margin: 24px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
+
+const CommentInput = styled.textarea`
+  width: 100%;
+  border: none;
+  resize: none;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: ${colors.black};
+  background: transparent;
+  white-space: pre-wrap;
+  word-break: break-word;
+  &::placeholder {
+    color: ${colors.grey[1]};
+  }
+  &:focus {
+    outline: none;
+  }
+`;
+
+const CommentDetailInput = styled(CommentInput)`
+  color: ${colors.black};
+  font-size: 16px;
+  font-weight: 500;
+  &::placeholder {
+    color: ${colors.grey[1]};
+  }
+  &:focus {
+    outline: none;
+  }
 `;
